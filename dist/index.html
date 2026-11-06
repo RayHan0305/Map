@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a1020">
+  <meta name="description" content="和飞天小女警一起探索地球，按地点收藏自己的旅行照片。">
+  <title>旅迹地球 · 个人旅行相册</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><ellipse cx="12" cy="12" rx="11" ry="3.7" transform="rotate(-30 12 12)"/><path d="M18.5 2v4M16.5 4h4"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.2"/><path d="m16 16 4 4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M19 10c0 5-7 10-7 10S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+    <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.3"/><path d="m4 17 4-4 3 3 4-5 5 5"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14m6-14v14"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3m-4 4v2"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2c0 6-4 10-10 10 6 0 10 4 10 10 0-6 4-10 10-10-6 0-10-4-10-10Z"/></symbol>
+    <symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 12V6a1.5 1.5 0 1 1 3 0v5-7a1.5 1.5 0 1 1 3 0v7-5a1.5 1.5 0 1 1 3 0v6-3a1.5 1.5 0 1 1 3 0v5a7 7 0 0 1-7 7h-1c-2 0-4-1-5-3l-3-5a1.5 1.5 0 0 1 2.5-1.6L8 14Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5M5 16v4h14v-4"/></symbol>
+  </svg>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./" aria-label="旅迹地球首页">
+        <span class="brand-icon"><svg class="icon"><use href="#i-orbit"/></svg></span>
+        <span>旅迹地球 <small>TRAVEL ATLAS</small></span>
+      </a>
+      <div class="record-search">
+        <label class="search-field">
+          <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+          <input id="record-query" type="search" placeholder="搜索已记录地点" aria-label="搜索已记录地点" aria-controls="record-results" autocomplete="off">
+        </label>
+        <div id="record-results" class="search-popup" hidden></div>
+      </div>
+      <button id="add-main" class="button primary"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>添加照片</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg> 个人旅行相册</div>
+      <h1 id="page-title">旅迹<span>地球</span></h1>
+      <p>转动地球，回到你去过的地方。<br>把一路上的照片收藏在这里。</p>
+    </section>
+
+    <section class="location-panel" aria-labelledby="locations-title">
+      <div class="stats">
+        <div><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span><strong id="place-total">0</strong><small>我的地点</small></span></div>
+        <div><svg class="icon" aria-hidden="true"><use href="#i-photo"/></svg><span><strong id="photo-total">0</strong><small>我的照片</small></span></div>
+      </div>
+      <div class="places-heading"><h2 id="locations-title">已记录地点</h2><span id="place-list-count"></span></div>
+      <div id="place-list" class="place-list"></div>
+      <p class="local-note"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg> 地点与照片保存在当前浏览器</p>
+    </section>
+
+    <section id="stage" class="stage" aria-label="互动地球">
+      <div class="star-field" aria-hidden="true"></div>
+      <div class="orbit orbit-one" aria-hidden="true"></div>
+      <div class="orbit orbit-two" aria-hidden="true"></div>
+      <canvas id="globe" tabindex="0" aria-label="3D 地球。可拖动或用方向键旋转。按加号或减号缩放，按回车选择中心点。"></canvas>
+      <img class="mascots" src="./powerpuff.svg" alt="在地球旁飞行的飞天小女警" draggable="false">
+      <div class="stage-tag"><span></span> 地球视图</div>
+      <div class="globe-controls" aria-label="地球控制">
+        <button id="zoom-in" class="icon-button" type="button" aria-label="放大" title="放大"><svg class="icon"><use href="#i-plus"/></svg></button>
+        <button id="zoom-out" class="icon-button" type="button" aria-label="缩小" title="缩小"><svg class="icon"><use href="#i-minus"/></svg></button>
+        <button id="reset-globe" class="icon-button" type="button" aria-label="回到初始视角" title="回到初始视角"><svg class="icon"><use href="#i-reset"/></svg></button>
+        <button id="toggle-rotation" class="icon-button" type="button" aria-label="暂停自转" title="暂停自转"><svg class="icon"><use href="#i-pause"/></svg></button>
+      </div>
+      <div class="stage-legend"><span class="legend-dot"></span> 有照片的地点</div>
+      <div class="stage-hint"><svg class="icon" aria-hidden="true"><use href="#i-hand"/></svg><span>拖动旋转 <i>·</i> 滚轮或双指缩放</span></div>
+      <div id="picking-banner" class="picking-banner" hidden>
+        <span><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg> 点按地球，标记照片拍摄地点</span>
+        <button id="cancel-picking" class="button quiet" type="button">取消</button>
+      </div>
+    </section>
+
+    <aside id="album" class="album" aria-labelledby="album-title" hidden>
+      <div class="album-top"><span class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg> 地点相册</span><button id="close-album" type="button" class="icon-button" aria-label="关闭相册"><svg class="icon"><use href="#i-close"/></svg></button></div>
+      <h2 id="album-title"></h2>
+      <div id="album-meta" class="album-meta"></div>
+      <button id="add-to-album" class="button primary" type="button"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>添加到此地点</button>
+      <div id="album-grid" class="album-grid"></div>
+    </aside>
+  </main>
+
+  <dialog id="upload-dialog" class="upload-dialog" aria-labelledby="upload-title">
+    <form id="upload-form">
+      <div class="dialog-top">
+        <div><div class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-photo"/></svg> 新的旅行记录</div><h2 id="upload-title">添加照片</h2></div>
+        <button id="close-upload" class="icon-button" type="button" aria-label="关闭上传窗口"><svg class="icon"><use href="#i-close"/></svg></button>
+      </div>
+      <div id="choose-location">
+        <label class="field-label" for="city-query">选择地点</label>
+        <div class="search-field city-field"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><input id="city-query" type="search" placeholder="搜索城市，如成都、京都或 Paris" autocomplete="off" aria-controls="city-results"></div>
+        <div id="city-results" class="city-results" aria-label="城市候选"></div>
+        <button id="start-picking" class="button quiet map-button" type="button"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg> 在地球上手动选点</button>
+      </div>
+      <div id="manual-location" hidden>
+        <label class="field-label" for="place-name">地点名称</label>
+        <input id="place-name" class="text-input" type="text" placeholder="如海边的灯塔" maxlength="50">
+        <p id="manual-coords" class="field-hint"></p>
+        <button id="confirm-location" class="button secondary" type="button">确认地点</button>
+        <button id="repick-location" class="button quiet" type="button">重新选点</button>
+      </div>
+      <div id="chosen-location" class="chosen-location" hidden></div>
+      <div id="photo-fields" hidden>
+        <label class="dropzone" id="dropzone">
+          <input id="files" type="file" accept="image/*" multiple>
+          <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>
+          <strong>选择照片</strong><span>可以一次添加多张，也可以拖到这里</span>
+        </label>
+        <div id="file-preview" class="file-preview"></div>
+        <div class="extra-fields">
+          <label><span class="field-label">旅行日期 <small>选填</small></span><input id="date" class="text-input" type="date"></label>
+          <label><span class="field-label">备注 <small>选填</small></span><input id="note" class="text-input" type="text" maxlength="160" placeholder="写一句当时的回忆"></label>
+        </div>
+      </div>
+      <p id="upload-error" class="form-error" role="alert" hidden></p>
+      <div id="upload-actions" class="dialog-actions" hidden><button id="save-photos" type="submit" class="button primary" disabled><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>保存照片</span></button></div>
+    </form>
+  </dialog>
+
+  <dialog id="lightbox" class="lightbox" aria-label="照片大图">
+    <button id="close-lightbox" class="icon-button" type="button" aria-label="关闭大图"><svg class="icon"><use href="#i-close"/></svg></button>
+    <button id="previous-photo" class="icon-button lightbox-nav previous" type="button" aria-label="上一张"><svg class="icon"><use href="#i-prev"/></svg></button>
+    <figure><img id="large-photo" alt=""><figcaption id="photo-caption"></figcaption></figure>
+    <button id="next-photo" class="icon-button lightbox-nav next" type="button" aria-label="下一张"><svg class="icon"><use href="#i-next"/></svg></button>
+  </dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

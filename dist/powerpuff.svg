@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 225" fill="none" role="img" aria-labelledby="title">
+  <title id="title">毛毛、泡泡和花花飞过夜空</title>
+  <defs>
+    <linearGradient id="pink" x1="168" y1="135" x2="354" y2="68" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fc8fab" stop-opacity="0"/>
+      <stop offset="1" stop-color="#fc8fab" stop-opacity=".8"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="52" y1="178" x2="222" y2="124" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a3ccff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#a3ccff" stop-opacity=".8"/>
+    </linearGradient>
+    <linearGradient id="green" x1="9" y1="201" x2="105" y2="171" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#99e3b0" stop-opacity="0"/>
+      <stop offset="1" stop-color="#99e3b0" stop-opacity=".7"/>
+    </linearGradient>
+    <path id="spark" d="M0-6.7 1.65-1.65 6.7 0 1.65 1.65 0 6.7-1.65 1.65-6.7 0-1.65-1.65Z"/>
+    <clipPath id="face-clip">
+      <path d="M-41-3C-42-21-28-32-4-33 21-35 42-22 43-5 45 14 31 29 6 32-18 35-39 22-41-3Z"/>
+    </clipPath>
+    <g id="flying-body" stroke="#211329" stroke-width="2.7" stroke-linejoin="round">
+      <path fill="#fcf2f5" d="M-20 31Q-35 35-47 39-52 42-50 47-48 50-43 49-28 46-16 38Z"/>
+      <path fill="#211329" d="M-46 39Q-52 40-53 44-54 48-49 50-46 51-42 49-46 46-46 39Z"/>
+      <path fill="#fcf2f5" d="M-13 37Q-22 46-31 50-35 54-30 58-26 61-22 58-11 50-7 41Z"/>
+      <path fill="#211329" d="M-31 50Q-36 53-33 57-28 62-22 58-28 56-28 48Z"/>
+      <path fill="#fbd0ab" d="M-21 24Q-32 20-40 25-45 28-43 32-41 36-35 33-30 30-24 32Z"/>
+      <path fill="currentColor" d="M-25 22Q-11 22-4 31L-13 48Q-25 49-34 41L-29 29Z"/>
+      <path fill="#211329" stroke="none" d="M-29 32Q-20 40-9 39L-12 44Q-25 43-31 38Z"/>
+      <path fill="#fbd0ab" d="M-9 31Q-1 27 5 28 11 29 10 34 9 39 2 39L-12 39Q-18 36-9 31Z"/>
+    </g>
+    <g id="face" stroke="#211329" stroke-width="2.7" stroke-linejoin="round">
+      <path fill="#ffdbb6" d="M-41-3C-42-21-28-32-4-33 21-35 42-22 43-5 45 14 31 29 6 32-18 35-39 22-41-3Z"/>
+      <g clip-path="url(#face-clip)">
+        <ellipse cx="-18" cy="4" rx="21.3" ry="22.6" fill="#fffaf5"/>
+        <ellipse cx="26" cy="3" rx="19.7" ry="22" fill="#fffaf5"/>
+        <ellipse cx="-12.3" cy="5.2" rx="15.1" ry="20.7" fill="currentColor" stroke="none"/>
+        <ellipse cx="32.5" cy="4" rx="14.2" ry="20" fill="currentColor" stroke="none"/>
+        <ellipse cx="-9.2" cy="4.7" rx="11.2" ry="16.5" fill="#211329" stroke="none"/>
+        <ellipse cx="35" cy="3.5" rx="10.8" ry="15.9" fill="#211329" stroke="none"/>
+        <ellipse cx="-11" cy="-1" rx="5" ry="6.7" fill="#fffaf5" stroke="none"/>
+        <ellipse cx="33.2" cy="-2.1" rx="4.7" ry="6.5" fill="#fffaf5" stroke="none"/>
+        <circle cx="-4.7" cy="11.5" r="1.6" fill="#fffaf5" stroke="none"/>
+        <circle cx="39.2" cy="10.2" r="1.6" fill="#fffaf5" stroke="none"/>
+      </g>
+      <path fill="#5f233d" stroke-width="1.5" d="M1 23Q6 25 12 22 10 29 6 29 3 29 1 23Z"/>
+    </g>
+  </defs>
+
+  <g stroke-linecap="round">
+    <path d="M7 207Q58 209 120 171" stroke="url(#green)" stroke-width="2.4"/>
+    <path d="M31 213Q79 211 117 184" stroke="url(#green)" stroke-width=".8"/>
+    <path d="M53 181Q133 183 242 120" stroke="url(#blue)" stroke-width="2.5"/>
+    <path d="M111 187Q183 172 236 132" stroke="url(#blue)" stroke-width=".75"/>
+    <path d="M155 135Q251 142 374 61" stroke="url(#pink)" stroke-width="2.7"/>
+    <path d="M197 143Q297 120 374 72" stroke="url(#pink)" stroke-width=".8"/>
+  </g>
+  <g opacity=".84">
+    <use href="#spark" transform="translate(306 49) scale(.84)" fill="#ffb2c5"/>
+    <use href="#spark" transform="translate(444 22) scale(.75)" fill="#ffda9c"/>
+    <use href="#spark" transform="translate(344 101) scale(.49)" fill="#ffb2c5"/>
+    <use href="#spark" transform="translate(188 98) scale(.66)" fill="#a9ceff"/>
+    <use href="#spark" transform="translate(295 128) scale(.43)" fill="#c5dcff"/>
+    <use href="#spark" transform="translate(81 143) scale(.61)" fill="#a5e8c0"/>
+    <use href="#spark" transform="translate(171 192) scale(.57)" fill="#ffda9c"/>
+    <circle cx="329" cy="35" r="1.3" fill="#ffda9c"/>
+    <circle cx="313" cy="98" r="1.1" fill="#b9ceff"/>
+    <circle cx="203" cy="87" r="1.4" fill="#d7e6ff"/>
+    <circle cx="68" cy="158" r="1.3" fill="#8be7ab"/>
+    <circle cx="184" cy="171" r="1.1" fill="#ffda9c"/>
+  </g>
+
+  <g transform="translate(126 162) rotate(-12) scale(.73)" color="#8cdd87">
+    <use href="#flying-body"/>
+    <path fill="#242336" stroke="#1a1326" stroke-width="2.7" stroke-linejoin="round" d="M-48-3C-52-20-41-36-23-41-5-49 19-44 34-31 45-24 50-8 44 5L48 17 34 11 29 17-31 18-43 13-53 15-47 6Z"/>
+    <use href="#face"/>
+    <path fill="#242336" stroke="#1a1326" stroke-width="2.7" stroke-linejoin="round" d="M-45-5C-48-25-34-38-20-42-2-48 24-43 38-29 44-23 47-14 46-7L39-11Q32-17 25-20L28-8Q11-11 2-25-2-13-23-13L-18-20Q-34-16-43-5Z"/>
+    <path d="M-32-30Q-22-37-10-38M-4-39H3" stroke="#56506a" stroke-width="1.6" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(252 111) rotate(-9) scale(.76)" color="#80c7f5">
+    <use href="#flying-body"/>
+    <g fill="#ffd15a" stroke="#482740" stroke-width="2.6" stroke-linejoin="round">
+      <path d="M-34-21C-44-37-64-35-70-22-74-13-70-3-65 0L-64-8Q-60 5-49 6L-53-2Q-41 0-36-9Z"/>
+      <path d="M32-23C39-36 56-37 63-26 69-18 64-12 66-7L60-12Q59-4 53 0L52-6Q43-4 37-12Z"/>
+    </g>
+    <path d="M-39-22-43-13M36-24 41-16" stroke="#7cbbf4" stroke-width="5" stroke-linecap="round"/>
+    <use href="#face"/>
+    <path fill="#ffd15a" stroke="#482740" stroke-width="2.6" stroke-linejoin="round" d="M-42-7C-44-25-27-38-5-40 19-42 39-32 44-16L43-8Q36-16 29-19 22-13 11-13L14-23Q2-15-10-13L-9-23Q-24-17-32-18Z"/>
+    <path d="M-30-29Q-20-35-10-36M-4-36H1" stroke="#ffea99" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(388 59) rotate(-8) scale(.79)" color="#f58cab">
+    <use href="#flying-body"/>
+    <path fill="#ef824c" stroke="#4d283b" stroke-width="2.7" stroke-linejoin="round" d="M-41-10Q-50 9-62 22L-54 21Q-65 28-75 29L-66 33-77 37Q-55 41-38 32L-42 38Q-22 39-11 24L31-12Q22-34-7-34-26-33-41-10Z"/>
+    <path fill="#ef824c" stroke="#4d283b" stroke-width="2.6" d="M-44-7Q-45-30-24-37 4-46 28-32 43-26 46-8Z"/>
+    <use href="#face"/>
+    <path fill="#f58c52" stroke="#4d283b" stroke-width="2.7" stroke-linejoin="round" d="M-43-7Q-44-26-28-34-10-43 11-39 38-36 44-17L44-9Q36-15 30-19L30-11Q22-12 15-19L14-11Q5-12-2-19L-4-11Q-14-12-22-19L-25-12Q-32-13-36-15Z"/>
+    <path d="M-30-29Q-20-35-9-35" stroke="#ffb47b" stroke-width="1.8" stroke-linecap="round"/>
+    <path fill="#f65071" stroke="#5a223b" stroke-width="2.7" stroke-linejoin="round" d="M1-40Q-10-56-26-58-28-44-17-33-6-33 1-37 10-31 23-35 31-44 30-57 13-57 3-41Z"/>
+    <path d="M-19-50Q-10-47-4-41M23-50Q14-46 9-41" stroke="#ff95a8" stroke-width="2.15" stroke-linecap="round"/>
+    <path fill="#fb6581" stroke="#5a223b" stroke-width="2.25" d="M-4-43Q0-46 6-43L8-37Q4-33-3-36Z"/>
+  </g>
+</svg>
