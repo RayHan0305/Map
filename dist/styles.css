@@ -87,6 +87,9 @@ h1 span { color: #ad2a69; }
 .row-arrow { width: 15px; height: 15px; color: #715690; }
 .local-note { display: flex; align-items: center; gap: 6px; margin: 13px 2px 0; color: var(--muted); font-size: 11px; }
 .local-note .icon { width: 14px; height: 14px; }
+.atlas-notes { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 12px; }
+.map-sources { flex-wrap: wrap; }
+.map-sources a { color: #67488a; }
 
 .stage { isolation: isolate; position: relative; grid-area: 1 / 1; height: clamp(590px, calc(100svh - 111px), 930px); overflow: hidden; background: radial-gradient(ellipse at 50% 48%, #eef1ff 0%, #dcdcff 43%, #dbd1fa 72%, #f4d9f4 100%); border: 1px solid #d5c3ea; border-radius: 28px; box-shadow: inset 0 0 46px #f8e9ff5e, 0 9px 32px #8062ab18; }
 .star-field { position: absolute; inset: 0; pointer-events: none; background:

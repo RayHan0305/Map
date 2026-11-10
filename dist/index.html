@@ -63,14 +63,17 @@
       </div>
       <div class="places-heading"><h2 id="locations-title">已记录地点</h2><span id="place-list-count"></span></div>
       <div id="place-list" class="place-list"></div>
-      <p class="local-note"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg> 地点与照片保存在当前浏览器</p>
+      <footer class="atlas-notes">
+        <p class="local-note"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg> 地点与照片保存在当前浏览器</p>
+        <p class="local-note map-sources">卫星影像 <a href="https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography/#July" target="_blank" rel="noopener">NASA Earth Observatory</a><span aria-hidden="true">·</span>国界与地名 <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a></p>
+      </footer>
     </section>
 
     <section id="stage" class="stage" aria-label="互动地球">
       <div class="star-field" aria-hidden="true"></div>
       <div class="orbit orbit-one" aria-hidden="true"></div>
       <div class="orbit orbit-two" aria-hidden="true"></div>
-      <canvas id="globe" tabindex="0" aria-label="3D 地球。可拖动或用方向键旋转。按加号或减号缩放，按回车选择中心点。"></canvas>
+      <canvas id="globe" tabindex="0" aria-label="3D 卫星地球，显示国界与地名。可拖动或用方向键旋转。按加号或减号缩放，按回车选择中心点。"></canvas>
       <img class="mascots" src="./powerpuff.svg" alt="在地球旁飞行的飞天小女警" draggable="false">
       <div class="stage-actions">
         <button id="pick-on-globe" class="button map-action" type="button"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>地球选点</button>

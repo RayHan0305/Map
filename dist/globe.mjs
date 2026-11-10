@@ -12,6 +12,170 @@ const MARKER_COLORS = {
 };
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const longitude = (value) => ((value + 180) % 360 + 360) % 360 - 180;
+const DAY_GAMMA = 0.78;
+const DAY_TONES = Array.from({ length: 256 }, (_, value) => 255 * Math.pow(value / 255, DAY_GAMMA));
+
+const VERTEX_SHADER = `
+  #if __VERSION__ >= 300
+    in vec2 a_position;
+  #else
+    attribute vec2 a_position;
+  #endif
+  void main() {
+    gl_Position = vec4(a_position, 0.0, 1.0);
+  }
+`;
+
+const EARTH_SHADER = `
+  #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+  #else
+    precision mediump float;
+  #endif
+  #if __VERSION__ >= 300
+    out vec4 earthColor;
+    #define SAMPLE_EARTH texture
+    #define OUTPUT_EARTH earthColor
+  #else
+    #define SAMPLE_EARTH texture2D
+    #define OUTPUT_EARTH gl_FragColor
+  #endif
+  uniform sampler2D u_earth;
+  uniform vec2 u_center;
+  uniform float u_radius;
+  uniform vec3 u_view;
+
+  void main() {
+    vec2 surface = (gl_FragCoord.xy - u_center) / u_radius;
+    float squared = dot(surface, surface);
+    if (squared > 1.0) discard;
+    float z = sqrt(1.0 - squared);
+    float lat = asin(clamp(surface.y * u_view.x + z * u_view.y, -1.0, 1.0));
+    float lon = u_view.z + atan(surface.x, z * u_view.x - surface.y * u_view.y);
+    vec2 uv = vec2(lon / 6.28318530718 + 0.5, 0.5 - lat / 3.14159265359);
+    vec3 ground = pow(SAMPLE_EARTH(u_earth, uv).rgb, vec3(${DAY_GAMMA})) + vec3(0.014, 0.026, 0.045);
+    float light = max(0.0, z * 0.85 - surface.x * 0.37 + surface.y * 0.38);
+    float limb = pow(1.0 - z, 4.0) * (0.5 + max(0.0, -surface.x + surface.y) * 0.48);
+    vec3 color = ground * (0.64 + 0.47 * light) + limb * vec3(0.17, 0.26, 0.43);
+    float edge = clamp((1.0 - sqrt(squared)) * u_radius + 0.5, 0.0, 1.0);
+    OUTPUT_EARTH = vec4(color, edge);
+  }
+`;
+
+function compileShader(gl, type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader;
+  gl.deleteShader(shader);
+  return null;
+}
+
+function textureCanvas(image, width, height) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(image, 0, 0, width, height);
+  return canvas;
+}
+
+function createEarthRenderer(invalidate) {
+  const canvas = document.createElement('canvas');
+  const options = { alpha: true, depth: false, antialias: false, premultipliedAlpha: false };
+  const webgl2 = canvas.getContext('webgl2', options);
+  const gl = webgl2 || canvas.getContext('webgl', options);
+  if (!gl) return null;
+  const version = webgl2 ? '#version 300 es\n' : '';
+  let uniforms;
+  let source;
+
+  function upload(image) {
+    source = image;
+    if (gl.isContextLost()) return false;
+    const vertex = compileShader(gl, gl.VERTEX_SHADER, version + VERTEX_SHADER);
+    const fragment = compileShader(gl, gl.FRAGMENT_SHADER, version + EARTH_SHADER);
+    if (!vertex || !fragment) return false;
+    const program = gl.createProgram();
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
+    gl.linkProgram(program);
+    gl.deleteShader(vertex);
+    gl.deleteShader(fragment);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return false;
+
+    gl.useProgram(program);
+    const vertices = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertices);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const position = gl.getAttribLocation(program, 'a_position');
+    gl.enableVertexAttribArray(position);
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+
+    const deviceLimit = matchMedia('(max-width: 700px)').matches ? 4096 : 8192;
+    const sizeLimit = Math.min(image.naturalWidth, gl.getParameter(gl.MAX_TEXTURE_SIZE), deviceLimit);
+    const width = webgl2 ? sizeLimit - sizeLimit % 2 : 2 ** Math.floor(Math.log2(sizeLimit));
+    const height = width / 2;
+    const map = width === image.naturalWidth && height === image.naturalHeight ? image : textureCanvas(image, width, height);
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, map);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    if (gl.getError() !== gl.NO_ERROR) {
+      gl.deleteTexture(texture);
+      gl.deleteBuffer(vertices);
+      gl.deleteProgram(program);
+      return false;
+    }
+
+    uniforms = {
+      center: gl.getUniformLocation(program, 'u_center'),
+      radius: gl.getUniformLocation(program, 'u_radius'),
+      view: gl.getUniformLocation(program, 'u_view'),
+    };
+    return true;
+  }
+
+  canvas.addEventListener('webglcontextlost', (event) => {
+    event.preventDefault();
+    uniforms = null;
+    invalidate();
+  });
+  canvas.addEventListener('webglcontextrestored', () => {
+    try {
+      if (source) upload(source);
+    } catch {
+      uniforms = null;
+    }
+    invalidate();
+  });
+
+  return {
+    upload,
+    draw(globe) {
+      if (!uniforms || gl.isContextLost()) return null;
+      const { width, height } = globe.canvas;
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      const { cx, cy, ratio, radius, angles } = globe;
+      const lat = angles.lat * RAD;
+      gl.viewport(0, 0, width, height);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.uniform2f(uniforms.center, cx * ratio, height - cy * ratio);
+      gl.uniform1f(uniforms.radius, radius * ratio);
+      gl.uniform3f(uniforms.view, Math.cos(lat), Math.sin(lat), angles.lon * RAD);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      return canvas;
+    },
+  };
+}
 
 function makeTexture() {
   const texture = document.createElement('canvas');
@@ -56,7 +220,7 @@ function makeTexture() {
   context.strokeStyle = '#9cb9f52b';
   context.lineWidth = 1.35;
   context.stroke();
-  return context.getImageData(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT).data;
+  return { pixels: context.getImageData(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT).data, width: TEXTURE_WIDTH, height: TEXTURE_HEIGHT };
 }
 
 export class TravelGlobe {
@@ -83,6 +247,47 @@ export class TravelGlobe {
     this.resizeObserver.observe(canvas);
     this.bindInput();
     this.resize();
+    this.loadEarth();
+    import('./geography.mjs').then(({ drawGeography }) => {
+      this.drawGeography = drawGeography;
+      this.invalidate();
+    }).catch(() => {});
+  }
+
+  loadEarth() {
+    if (typeof Image !== 'function') return;
+    try {
+      this.earth = createEarthRenderer(() => this.invalidate());
+    } catch {
+      this.earth = null;
+    }
+    const image = new Image();
+    image.onload = () => {
+      let uploaded = false;
+      try {
+        uploaded = this.earth?.upload(image);
+      } catch {
+        this.earth = null;
+      }
+      if (!uploaded) {
+        try {
+          const width = Math.min(image.naturalWidth, 2048);
+          const height = Math.round(width / 2);
+          const canvas = textureCanvas(image, width, height);
+          const pixels = canvas.getContext('2d').getImageData(0, 0, width, height).data;
+          for (let pixel = 0; pixel < pixels.length; pixel += 4) {
+            pixels[pixel] = DAY_TONES[pixels[pixel]] + 4;
+            pixels[pixel + 1] = DAY_TONES[pixels[pixel + 1]] + 7;
+            pixels[pixel + 2] = DAY_TONES[pixels[pixel + 2]] + 11;
+          }
+          this.texture = { pixels, width, height, daylight: true };
+        } catch {
+          // The vector texture remains available if the raster cannot be decoded.
+        }
+      }
+      this.invalidate();
+    };
+    image.src = new URL('./earth-day.jpg', import.meta.url).href;
   }
 
   setPlaces(places) {
@@ -178,13 +383,19 @@ export class TravelGlobe {
     this.width = rect.width;
     this.height = rect.height;
     this.ratio = Math.min(devicePixelRatio || 1, 2);
-    this.canvas.width = Math.round(this.width * this.ratio);
-    this.canvas.height = Math.round(this.height * this.ratio);
+    const pixelWidth = Math.round(this.width * this.ratio);
+    const pixelHeight = Math.round(this.height * this.ratio);
+    if (this.canvas.width !== pixelWidth) this.canvas.width = pixelWidth;
+    if (this.canvas.height !== pixelHeight) this.canvas.height = pixelHeight;
     this.cx = this.width / 2;
     this.cy = this.height / 2;
     const shortEdge = Math.min(this.width, this.height);
     const margin = clamp(shortEdge * 0.035, 10, 24);
     this.radius = Math.max(1, shortEdge / 2 - margin) * this.scale;
+    this.invalidate();
+  }
+
+  prepareSoftwareSurface() {
     const size = Math.max(1, Math.min(560, Math.round(this.radius * 2 * this.ratio)));
     if (this.sphere.width !== size || this.sphere.height !== size || !this.spherePixels) {
       this.sphere.width = this.sphere.height = size;
@@ -202,7 +413,6 @@ export class TravelGlobe {
         }
       }
     }
-    this.invalidate();
   }
 
   invalidate() {
@@ -235,35 +445,9 @@ export class TravelGlobe {
     context.fillStyle = halo;
     context.fillRect(cx - radius * 1.22, cy - radius * 1.22, radius * 2.44, radius * 2.44);
 
-    const cosLat = Math.cos(this.angles.lat * RAD);
-    const sinLat = Math.sin(this.angles.lat * RAD);
-    const viewLon = this.angles.lon * RAD;
-    const pixels = this.spherePixels.data;
-    for (let ray = 0, pixel = 0; ray < this.rays.length; ray += 3, pixel += 4) {
-      const z = this.rays[ray + 2];
-      if (z < 0) continue;
-      const x = this.rays[ray];
-      const y = this.rays[ray + 1];
-      const lat = Math.asin(clamp(y * cosLat + z * sinLat, -1, 1));
-      const lon = viewLon + Math.atan2(x, z * cosLat - y * sinLat);
-      const u = (Math.floor((lon / TAU + 1.5) * TEXTURE_WIDTH)) % TEXTURE_WIDTH;
-      const v = Math.min(TEXTURE_HEIGHT - 1, Math.floor((0.5 - lat / Math.PI) * TEXTURE_HEIGHT));
-      const texel = (v * TEXTURE_WIDTH + u) * 4;
-      const light = Math.max(0, z * 0.85 - x * 0.37 + y * 0.38);
-      const limb = Math.pow(1 - z, 4) * (0.5 + Math.max(0, -x + y) * 0.48);
-      const shade = 0.44 + light * 0.72;
-      pixels[pixel] = this.texture[texel] * shade + limb * 41;
-      pixels[pixel + 1] = this.texture[texel + 1] * shade + limb * 58;
-      pixels[pixel + 2] = this.texture[texel + 2] * shade + limb * 105;
-      pixels[pixel + 3] = 255;
-    }
-    this.sphereContext.putImageData(this.spherePixels, 0, 0);
-    context.save();
-    context.beginPath();
-    context.arc(cx, cy, radius, 0, TAU);
-    context.clip();
-    context.drawImage(this.sphere, cx - radius, cy - radius, 2 * radius, 2 * radius);
-    context.restore();
+    const earth = this.earth?.draw(this);
+    if (earth) context.drawImage(earth, 0, 0, width, height);
+    else this.drawSoftware();
 
     const rim = context.createLinearGradient(cx - radius, cy - radius, cx + radius, cy + radius);
     rim.addColorStop(0, '#adc7ffcf');
@@ -274,9 +458,45 @@ export class TravelGlobe {
     context.beginPath();
     context.arc(cx, cy, radius, 0, TAU);
     context.stroke();
+    this.drawGeography?.(context, this);
     this.drawPlaces();
     if (this.picking) this.drawReticle();
     if (this.flight || this.autoRotate) this.invalidate();
+  }
+
+  drawSoftware() {
+    this.prepareSoftwareSurface();
+    const { context, cx, cy, radius } = this;
+    const cosLat = Math.cos(this.angles.lat * RAD);
+    const sinLat = Math.sin(this.angles.lat * RAD);
+    const viewLon = this.angles.lon * RAD;
+    const { pixels: texture, width, height, daylight } = this.texture;
+    const pixels = this.spherePixels.data;
+    for (let ray = 0, pixel = 0; ray < this.rays.length; ray += 3, pixel += 4) {
+      const z = this.rays[ray + 2];
+      if (z < 0) continue;
+      const x = this.rays[ray];
+      const y = this.rays[ray + 1];
+      const lat = Math.asin(clamp(y * cosLat + z * sinLat, -1, 1));
+      const lon = viewLon + Math.atan2(x, z * cosLat - y * sinLat);
+      const u = Math.floor((lon / TAU + 1.5) * width) % width;
+      const v = Math.min(height - 1, Math.floor((0.5 - lat / Math.PI) * height));
+      const texel = (v * width + u) * 4;
+      const light = Math.max(0, z * 0.85 - x * 0.37 + y * 0.38);
+      const limb = Math.pow(1 - z, 4) * (0.5 + Math.max(0, -x + y) * 0.48);
+      const shade = daylight ? 0.64 + light * 0.47 : 0.44 + light * 0.72;
+      pixels[pixel] = texture[texel] * shade + limb * 41;
+      pixels[pixel + 1] = texture[texel + 1] * shade + limb * 58;
+      pixels[pixel + 2] = texture[texel + 2] * shade + limb * 105;
+      pixels[pixel + 3] = 255;
+    }
+    this.sphereContext.putImageData(this.spherePixels, 0, 0);
+    context.save();
+    context.beginPath();
+    context.arc(cx, cy, radius, 0, TAU);
+    context.clip();
+    context.drawImage(this.sphere, cx - radius, cy - radius, 2 * radius, 2 * radius);
+    context.restore();
   }
 
   drawReticle() {
