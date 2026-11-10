@@ -1,0 +1,64 @@
+.photo-editor {
+  width: min(730px, calc(100% - 24px));
+  padding: 18px 21px;
+  overflow: auto;
+  color: var(--text);
+}
+.photo-editor-header { align-items: center; margin-bottom: 11px; }
+.photo-editor-header h2 { margin-top: 0; font-size: clamp(22px, 4vw, 28px); }
+.photo-editor-filename {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.photo-editor-viewfinder {
+  display: grid;
+  place-items: center;
+  min-height: 105px;
+  padding: 8px;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #211833;
+}
+.photo-editor-preview {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(44dvh, 440px);
+  touch-action: none;
+  cursor: crosshair;
+}
+.photo-editor-loading { color: #f6def6; font-size: 13px; }
+.photo-editor-transform {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 9px 0;
+}
+.photo-editor-transform .button { min-height: 38px; padding: 0 10px; font-size: 12px; }
+.photo-editor-angle { color: var(--muted); font-size: 12px; margin-inline-start: auto; }
+.photo-editor-crop {
+  min-width: 0;
+  padding: 6px 10px 10px;
+  margin: 0 0 9px;
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+}
+.photo-editor-crop legend, .photo-editor-note { font-size: 13px; font-weight: 760; }
+.photo-editor-hint { margin: 0 0 7px; color: var(--muted); font-size: 12px; }
+.photo-editor-crop-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.photo-editor-crop-fields label { display: grid; gap: 4px; font-size: 11px; color: var(--muted); }
+.photo-editor-crop-fields .text-input { min-height: 35px; padding: 5px 8px; font-size: 13px; }
+.photo-editor-note { display: grid; gap: 5px; }
+.photo-editor-note textarea { min-height: 60px; padding: 8px 10px; font: inherit; font-weight: 500; resize: vertical; }
+.photo-editor-error { margin: 7px 0 0; color: #9e2446; font-size: 12px; }
+.photo-editor-footer { justify-content: space-between; gap: 8px; margin-top: 10px; }
+
+@media (max-width: 520px) {
+  .photo-editor { width: calc(100% - 14px); padding: 12px; }
+  .photo-editor-preview { max-height: 39dvh; }
+  .photo-editor-transform .button { min-height: 39px; }
+}

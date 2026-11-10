@@ -1,21 +1,34 @@
 const databaseName = 'travel-globe';
 const placesStore = 'places';
 const photosStore = 'photos';
+const editsStore = 'photo-edits';
 const byPlaceIndex = 'byPlace';
 
 let connection;
 
 function openDatabase() {
   connection ??= new Promise((resolve, reject) => {
-    const request = indexedDB.open(databaseName, 1);
-    request.onupgradeneeded = () => {
+    const request = indexedDB.open(databaseName, 2);
+    let blocked = false;
+    request.onupgradeneeded = ({ oldVersion }) => {
       const database = request.result;
-      database.createObjectStore(placesStore, { keyPath: 'id' });
-      database.createObjectStore(photosStore, { keyPath: 'id' })
-        .createIndex(byPlaceIndex, 'placeId');
+      if (oldVersion < 1) {
+        database.createObjectStore(placesStore, { keyPath: 'id' });
+        database.createObjectStore(photosStore, { keyPath: 'id' })
+          .createIndex(byPlaceIndex, 'placeId');
+      }
+      database.createObjectStore(editsStore, { keyPath: 'id' });
+    };
+    request.onblocked = () => {
+      blocked = true;
+      reject(new Error('请关闭其他贝Ki-Map 标签页，再刷新以升级相册。'));
     };
     request.onsuccess = () => {
       const database = request.result;
+      if (blocked) {
+        database.close();
+        return;
+      }
       database.onversionchange = () => {
         database.close();
         connection = undefined;
@@ -62,6 +75,26 @@ export async function loadPlaces() {
     albums.get(photo.placeId)?.photos.push(photo);
   }
   return Array.from(albums.values());
+}
+
+export async function loadPhotoEdits() {
+  const database = await openDatabase();
+  const transaction = database.transaction(editsStore, 'readonly');
+  const [entries] = await Promise.all([
+    resultOf(transaction.objectStore(editsStore).getAll()),
+    transactionDone(transaction),
+  ]);
+  return new Map(entries.map(({ id, ...edit }) => [id, edit]));
+}
+
+export async function savePhotoEdit(id, edit) {
+  const database = await openDatabase();
+  const transaction = database.transaction(editsStore, 'readwrite');
+  const store = transaction.objectStore(editsStore);
+  await Promise.all([
+    resultOf(edit === null ? store.delete(id) : store.put({ ...edit, id })),
+    transactionDone(transaction),
+  ]);
 }
 
 export async function savePhotos(place, files, { date = '', note = '', locations = [] } = {}) {

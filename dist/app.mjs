@@ -1,15 +1,19 @@
 import { DETAIL_ZOOM, TravelGlobe } from './globe.mjs';
 import { nearestCity, searchCities } from './cities.mjs';
-import { loadPlaces, savePhotos } from './storage.mjs';
+import { loadPhotoEdits, loadPlaces, savePhotos } from './storage.mjs';
 import { parseCoordinates, searchGlobalPlaces } from './geocoder.mjs';
 import { StreetMap } from './street-map.mjs';
 import { showIntro } from './intro.mjs';
 import { buildAlbums } from './albums.mjs';
 import { readPhotoCoordinates } from './photo-gps.mjs';
-import { findCountry, searchCountries } from './countries.mjs';
+import { countryById, findCountry, searchCountries } from './countries.mjs';
 import { buildJourney } from './journey.mjs';
+import { albumPlaces, photoImage, photoNote, photoUrl } from './album-library.mjs';
+import { albumHref, readAlbumContext, rememberAlbumContext, returnToken } from './album-navigation.mjs';
+import { samples } from './samples.mjs';
 
-showIntro();
+const initialContext = readAlbumContext(returnToken());
+if (!initialContext) showIntro();
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('globe');
@@ -26,17 +30,8 @@ const streetDialog = $('street-dialog');
 const streetCoordinates = $('street-coords');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
-const samples = [
-  ['city-kyoto', '京都', '日本', 35.0116, 135.7681, 'kyoto', '东山暮色', '2025-04-12', { lat: 34.99486, lon: 135.78505, label: '清水寺附近' }],
-  ['city-shanghai', '上海', '中国', 31.2304, 121.4737, 'shanghai', '外滩的夜', '2025-08-23', { lat: 31.24011, lon: 121.49009, label: '外滩' }],
-  ['city-reykjavik', '雷克雅未克', '冰岛', 64.1466, -21.9426, 'reykjavik', '北方的光', '2026-02-18', { lat: 64.15529, lon: -21.97599, label: '海湾附近' }],
-].map(([id, name, region, lat, lon, image, title, date, location]) => ({
-  id, name, region, lat, lon, demo: true,
-  photos: [{ id: image, src: './demo-' + image + '.svg', name: title, date, note: '旅行插画 · 示例', location }],
-}));
-
 const places = new Map();
-const photoUrls = new Map();
+let photoEdits = new Map();
 let albums = new Map();
 let albumCountries = new Map();
 let activeCountry = null;
@@ -96,21 +91,6 @@ function icon(name, className) {
   return svg;
 }
 
-function photoUrl(photo) {
-  if (photo.src) return photo.src;
-  if (!photoUrls.has(photo.id)) photoUrls.set(photo.id, URL.createObjectURL(photo.blob));
-  return photoUrls.get(photo.id);
-}
-
-function photoImage(photo, alt) {
-  const image = element('img');
-  image.alt = alt;
-  image.src = photoUrl(photo);
-  image.loading = 'lazy';
-  image.decoding = 'async';
-  return image;
-}
-
 function setRotation(enabled) {
   rotation = enabled;
   globe.setAutoRotate(enabled);
@@ -122,7 +102,7 @@ function setRotation(enabled) {
 }
 
 function knownPlaces() {
-  return [...places.values(), ...samples.filter(({ id }) => !places.has(id))];
+  return albumPlaces(places, photoEdits);
 }
 
 function placeById(id) {
@@ -281,7 +261,12 @@ function showPlace(place, detail = null, keepCamera = false) {
   const cover = $('album-cover');
   cover.hidden = !photos.length;
   cover.replaceChildren(...(photos.length ? [photoImage(photos[0], '')] : []));
-  cover.onclick = photos.length ? () => openLightbox(photos, 0) : null;
+  const albumLink = $('open-album-page');
+  albumLink.hidden = !photos.length;
+  if (photos.length) {
+    bindAlbumLink(cover, id);
+    bindAlbumLink(albumLink, id);
+  }
   $('album-grid').replaceChildren(...photos.map((photo, index) => {
     const button = element('button', 'thumbnail');
     button.type = 'button';
@@ -336,6 +321,57 @@ function setView(view, selection = null) {
   }
 }
 
+function albumContext(selection = journeySelection) {
+  return {
+    view: currentView,
+    selection,
+    scrollY: window.scrollY,
+    camera: { ...globe.getCenter(), scale: globe.getZoom() },
+    countryId: activeCountry?.id,
+    countryOpen: !countryPanel.hidden,
+    albumId: focusedAlbumId,
+    albumOpen: !album.hidden && !activePlace?.draft,
+    pointId: activePoint?.id,
+    rotation,
+  };
+}
+
+function bindAlbumLink(link, id, selection) {
+  link.href = albumHref(id);
+  link.onclick = (event) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const token = rememberAlbumContext(albumContext(selection));
+    location.assign(albumHref(id, token));
+  };
+}
+
+function restoreAlbumContext(context) {
+  if (!context) return;
+  if (context.view === 'journey') {
+    setView('journey', context.selection);
+    if (!context.selection) window.scrollTo(0, context.scrollY || 0);
+    return;
+  }
+  const city = albums.get(context.albumId);
+  if (city && context.albumOpen) {
+    showPlace(city, city.points.find(({ id }) => id === context.pointId), true);
+  } else {
+    activeCountry = countryById(context.countryId);
+    focusedAlbumId = city?.id ?? null;
+    if (activeCountry && context.countryOpen) showCountry(activeCountry);
+    else {
+      closeAlbum();
+      countryPanel.hidden = true;
+    }
+  }
+  if (Number.isFinite(context.camera?.lat) && Number.isFinite(context.camera?.lon)) {
+    globe.focus(context.camera.lat, context.camera.lon, { scale: context.camera.scale });
+  }
+  setRotation(Boolean(context.rotation) && !reducedMotion.matches);
+  window.scrollTo(0, context.scrollY || 0);
+}
+
 function openJourneyPhoto(entry) {
   const city = albums.get(entry.albumId);
   if (!city) return;
@@ -366,7 +402,9 @@ function renderJourney() {
       const card = element('article', 'journey-city');
       card.dataset.album = albumId;
       card.tabIndex = -1;
-      if (journeySelection?.albumId === albumId) {
+      const selectedDay = journeySelection?.albumId === albumId
+        && (journeySelection.date === undefined || journeySelection.date === date);
+      if (selectedDay) {
         card.setAttribute('aria-current', 'true');
         target ??= card;
       }
@@ -376,7 +414,11 @@ function renderJourney() {
       const mapButton = element('button', 'button secondary', '打开城市');
       mapButton.type = 'button';
       mapButton.addEventListener('click', () => openAlbum(albumId));
-      head.append(title, mapButton);
+      const actions = element('div', 'journey-actions');
+      const albumLink = element('a', 'button quiet journey-open', '打开影集');
+      bindAlbumLink(albumLink, albumId, { albumId, date });
+      actions.append(mapButton, albumLink);
+      head.append(title, actions);
       const media = element('div', 'journey-entries');
       for (const entry of photos) {
         const row = element('button', 'journey-entry');
@@ -384,8 +426,9 @@ function renderJourney() {
         row.dataset.photo = entry.photo.id;
         row.setAttribute('aria-label', (entry.pointId ? '定位拍摄点 · ' : '打开城市 · ') + entry.photo.name);
         const caption = element('span', '', entry.photo.name || '旅行照片');
-        if (entry.photo.note) caption.append(element('small', '', entry.photo.note));
-        if (journeySelection?.pointId && journeySelection.pointId === entry.pointId) {
+        const note = photoNote(entry.photo);
+        if (note) caption.append(element('small', '', note));
+        if (selectedDay && journeySelection?.pointId && journeySelection.pointId === entry.pointId) {
           row.setAttribute('aria-current', 'true');
           if (target?.className !== 'journey-entry') target = row;
         }
@@ -822,7 +865,7 @@ function renderLightbox() {
   const photo = lightboxPhotos[photoIndex];
   $('large-photo').src = photoUrl(photo);
   $('large-photo').alt = photo.name || '旅行照片';
-  $('photo-caption').textContent = [photo.name, photo.date, photo.note, (photoIndex + 1) + ' / ' + lightboxPhotos.length].filter(Boolean).join(' · ');
+  $('photo-caption').textContent = [photo.name, photo.date, photoNote(photo), (photoIndex + 1) + ' / ' + lightboxPhotos.length].filter(Boolean).join(' · ');
   $('previous-photo').hidden = lightboxPhotos.length < 2;
   $('next-photo').hidden = lightboxPhotos.length < 2;
 }
@@ -976,10 +1019,22 @@ lightbox.addEventListener('click', (event) => {
 
 setRotation(rotation);
 renderPlaces();
-try {
-  for (const place of await loadPlaces()) places.set(place.id, place);
-  renderPlaces();
-} catch (error) {
-  toast('当前浏览器无法读取本地相册。请检查网站存储权限。');
-  console.error(error);
+
+async function refreshAlbums(context) {
+  try {
+    const [saved, edits] = await Promise.all([loadPlaces(), loadPhotoEdits()]);
+    places.clear();
+    for (const place of saved) places.set(place.id, place);
+    photoEdits = edits;
+    renderPlaces();
+  } catch (error) {
+    toast(error.message?.includes('标签页') ? error.message : '当前浏览器无法读取本地相册。请检查网站存储权限。');
+    console.error(error);
+  }
+  restoreAlbumContext(context);
 }
+
+window.addEventListener('pageshow', ({ persisted }) => {
+  if (persisted) void refreshAlbums(albumContext());
+});
+await refreshAlbums(initialContext);

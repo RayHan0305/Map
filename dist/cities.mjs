@@ -52,6 +52,7 @@ urumqi|乌鲁木齐|中国|43.83|87.62|Ürümqi,Urumchi
 kashgar|喀什|中国|39.47|75.99|Kashgar,Kashi
 hohhot|呼和浩特|中国|40.84|111.75|Hohhot
 harbin|哈尔滨|中国|45.80|126.53|Harbin
+daqing|大庆|中国|46.60|125.02|Daqing,大庆市,黑龙江大庆
 changchun|长春|中国|43.82|125.32|Changchun
 shenyang|沈阳|中国|41.80|123.43|Shenyang
 dalian|大连|中国|38.91|121.61|Dalian

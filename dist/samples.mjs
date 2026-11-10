@@ -1,0 +1,73 @@
+const resizeNote = '原图缩小至 960 像素宽';
+
+export const samples = [
+  {
+    id: 'city-reykjavik',
+    name: '雷克雅未克',
+    region: '冰岛',
+    lat: 64.1466,
+    lon: -21.9426,
+    demo: true,
+    photos: [{
+      id: 'reykjavik',
+      src: './demo-reykjavik.jpg',
+      name: '雷克雅未克夏夜',
+      date: '2014-08-07',
+      note: '示例照片 · 位置为市区近似坐标',
+      location: { lat: 64.1466, lon: -21.9426, label: '雷克雅未克市区（近似）' },
+      credit: {
+        author: 'Ypsilon from Finland',
+        license: 'CC0 1.0',
+        source: 'https://commons.wikimedia.org/wiki/File:Reykjavik_view_with_Hallagrimskirkja.jpg',
+        licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/',
+        changes: resizeNote,
+      },
+    }],
+  },
+  {
+    id: 'city-london',
+    name: '伦敦',
+    region: '英国',
+    lat: 51.50853,
+    lon: -0.12574,
+    demo: true,
+    photos: [{
+      id: 'london',
+      src: './demo-london.jpg',
+      name: '伦敦塔桥暮色',
+      date: '2012-01-30',
+      note: '示例照片 · 在伦敦桥上拍摄',
+      location: { lat: 51.507717, lon: -0.087767, label: '伦敦桥' },
+      credit: {
+        author: 'Donnchadh H',
+        license: 'CC BY 2.0',
+        source: 'https://commons.wikimedia.org/wiki/File:Tower_Bridge_dusk.jpg',
+        licenseUrl: 'https://creativecommons.org/licenses/by/2.0/',
+        changes: resizeNote,
+      },
+    }],
+  },
+  {
+    id: 'city-daqing',
+    name: '大庆',
+    region: '中国',
+    lat: 46.60,
+    lon: 125.02,
+    demo: true,
+    photos: [{
+      id: 'daqing',
+      src: './demo-daqing.jpg',
+      name: '龙凤湿地观景桥',
+      date: '2018-07-28',
+      note: '示例照片 · 位置为公园近似坐标',
+      location: { lat: 46.5342, lon: 125.1674, label: '龙凤湿地公园（近似）' },
+      credit: {
+        author: 'Jason Zhang',
+        license: 'CC BY-SA 3.0',
+        source: 'https://commons.wikimedia.org/wiki/File:Longfeng_Wetland_Park_observation_bridge_(2).jpg',
+        licenseUrl: 'https://creativecommons.org/licenses/by-sa/3.0/',
+        changes: resizeNote,
+      },
+    }],
+  },
+];

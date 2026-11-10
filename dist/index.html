@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f9effb">
+  <meta name="theme-color" content="#101735">
   <meta name="description" content="贝Ki-Map 是你的 3D 旅行相册。按地点收藏照片，沿着旅程重访拍摄点。">
   <meta property="og:title" content="贝Ki-Map">
   <meta property="og:description" content="在 3D 地球上浏览旅行照片和拍摄点。">
@@ -12,6 +12,7 @@
   <title>贝Ki-Map · 个人旅行相册</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./sky.css">
   <link rel="stylesheet" href="./intro.css">
 </head>
 <body>
@@ -81,7 +82,7 @@
     </section>
 
     <section id="stage" class="stage" aria-label="互动地球">
-      <div class="star-field" aria-hidden="true"></div>
+      <div class="star-field" aria-hidden="true"><span class="sky-meteor"></span><span class="sky-meteor"></span><span class="sky-meteor"></span><span class="sky-meteor"></span></div>
       <div class="orbit orbit-one" aria-hidden="true"></div>
       <div class="orbit orbit-two" aria-hidden="true"></div>
       <canvas id="globe" tabindex="0" aria-label="3D 卫星地球。点击陆地浏览国家。可拖动或用方向键旋转，按加号或减号缩放，按回车选择中心点。"></canvas>
@@ -116,11 +117,12 @@
       <div id="album-meta" class="album-meta"></div>
       <p id="album-coords" class="album-coords"></p>
       <p id="album-point-name" class="album-point-name" hidden></p>
-      <button id="album-cover" type="button" class="album-cover" aria-label="查看相册封面大图" hidden></button>
+      <a id="album-cover" class="album-cover" aria-label="打开影集" hidden></a>
       <button id="add-to-album" class="button primary" type="button"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>添加到此地点</button>
       <button id="refine-place" class="button secondary" type="button"><svg class="icon" aria-hidden="true"><use href="#i-map"/></svg>在街道地图微调</button>
       <button id="show-album-points" class="button secondary" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span>查看拍摄点</span></button>
       <button id="show-all-photos" class="button secondary" type="button" hidden>返回全部照片</button>
+      <a id="open-album-page" class="button secondary" hidden><svg class="icon" aria-hidden="true"><use href="#i-photo"/></svg>打开影集</a>
       <button id="show-album-in-journey" class="button quiet journey-link" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#i-journey"/></svg>在旅程中查看</button>
       <div id="album-grid" class="album-grid"></div>
     </aside>

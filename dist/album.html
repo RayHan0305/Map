@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101735">
+  <meta name="description" content="浏览和编辑贝Ki-Map 的城市旅行影集。">
+  <title>贝Ki-Map · 旅行影集</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./sky.css">
+  <link rel="stylesheet" href="./album.css">
+  <link rel="stylesheet" href="./photo-editor.css">
+</head>
+<body class="album-page">
+  <header class="album-bar">
+    <a class="album-brand" href="./" aria-label="贝Ki-Map 首页">贝Ki-Map</a>
+    <a id="album-back" class="button album-back" href="./"><span aria-hidden="true">‹</span><span id="album-back-label">返回地图</span></a>
+  </header>
+  <main class="album-main">
+    <section id="album-hero" class="album-hero" aria-labelledby="album-page-title" hidden>
+      <div class="star-field" aria-hidden="true"><span class="sky-meteor"></span><span class="sky-meteor"></span><span class="sky-meteor"></span><span class="sky-meteor"></span></div>
+      <div class="album-hero-copy">
+        <p class="album-kicker">城市影集 <span id="album-example" hidden>示例</span></p>
+        <h1 id="album-page-title"></h1>
+        <p id="album-page-meta" class="album-hero-meta"></p>
+      </div>
+      <button id="album-page-cover" class="album-page-cover" type="button" aria-label="查看封面照片"></button>
+    </section>
+    <p id="album-status" class="album-status" role="status">正在读取影集…</p>
+    <section id="album-collection" class="album-collection" aria-labelledby="album-collection-title" hidden>
+      <h2 id="album-collection-title">全部照片</h2>
+      <div id="album-page-grid" class="album-page-grid"></div>
+      <div id="album-credits" class="album-credits" hidden></div>
+    </section>
+  </main>
+  <dialog id="album-viewer" class="album-viewer" aria-label="照片大图">
+    <div class="album-viewer-top">
+      <span id="viewer-count" class="viewer-count" aria-live="polite"></span>
+      <div class="album-viewer-actions">
+        <button id="edit-photo" class="button primary" type="button">编辑照片</button>
+        <button id="viewer-close" class="icon-button" type="button" aria-label="关闭大图">✕</button>
+      </div>
+    </div>
+    <div id="viewer-frame" class="album-viewer-frame">
+      <button id="viewer-prev" class="icon-button viewer-nav" type="button" aria-label="上一张">‹</button>
+      <img id="viewer-image" alt="" draggable="false">
+      <button id="viewer-next" class="icon-button viewer-nav" type="button" aria-label="下一张">›</button>
+    </div>
+    <div class="album-viewer-copy">
+      <p id="viewer-caption"></p>
+      <p id="viewer-note"></p>
+      <div id="viewer-credit" class="viewer-credit" hidden></div>
+      <span id="viewer-edited" hidden>已编辑</span>
+    </div>
+  </dialog>
+  <div id="album-toast" class="toast" role="status" hidden></div>
+  <script type="module" src="./album-page.mjs"></script>
+</body>
+</html>
