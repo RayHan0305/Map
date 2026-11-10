@@ -179,7 +179,7 @@
     </g>
   </defs>
 
-  <g stroke-linecap="round">
+  <g id="mascot-trails" stroke-linecap="round">
     <use href="#flight-green" stroke="url(#trail-green)" stroke-width="3.4"/>
     <use href="#flight-blue" stroke="url(#trail-blue)" stroke-width="3.6"/>
     <use href="#flight-pink" stroke="url(#trail-pink)" stroke-width="3.8"/>
