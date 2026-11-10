@@ -77,6 +77,7 @@
       <div id="place-list" class="place-list"></div>
       <footer class="atlas-notes">
         <p class="local-note"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg> 地点与照片保存在当前浏览器</p>
+        <button id="open-backup" class="button quiet backup-link" type="button" aria-haspopup="dialog" hidden>相册备份与迁移</button>
         <p class="local-note map-sources">卫星影像 <a href="https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography/#July" target="_blank" rel="noopener">NASA Earth Observatory</a><span aria-hidden="true">·</span>国界与地名 <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a></p>
       </footer>
     </section>
@@ -215,7 +216,30 @@
     <figure><img id="large-photo" alt=""><figcaption id="photo-caption"></figcaption></figure>
     <button id="next-photo" class="icon-button lightbox-nav next" type="button" aria-label="下一张"><svg class="icon"><use href="#i-next"/></svg></button>
   </dialog>
+  <dialog id="backup-dialog" class="backup-dialog" aria-labelledby="backup-title" aria-describedby="backup-intro">
+    <div class="dialog-top">
+      <h2 id="backup-title">相册备份与迁移</h2>
+      <button id="close-backup" class="icon-button" type="button" aria-label="关闭"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+    <p id="backup-intro">换网址或换设备时，先在原来存有照片的浏览器导出备份，再在新网址或设备上导入。备份包含个人照片和地点，请妥善保管。</p>
+    <section class="backup-section" aria-labelledby="backup-export-title">
+      <h3 id="backup-export-title">从当前浏览器导出</h3>
+      <p>下载地点、原图、日期、备注和已保存的编辑。</p>
+      <button id="export-backup" class="button secondary" type="button">下载备份</button>
+    </section>
+    <form id="backup-import-form" class="backup-section">
+      <h3>将备份导入当前浏览器</h3>
+      <p>备份只在本机读取。同一备份可以再次导入，已有记录会保留。</p>
+      <label for="backup-file" class="field-label">选择贝Ki-Map 备份文件</label>
+      <input id="backup-file" type="file" accept=".json,application/json" required>
+      <button id="import-backup" class="button primary" type="submit" disabled>导入备份</button>
+    </form>
+    <p id="backup-status" class="backup-status" role="status" aria-atomic="true"></p>
+    <button id="refresh-after-backup" class="button secondary" type="button" hidden>刷新查看相册</button>
+  </dialog>
+
   <div id="toast" class="toast" role="status" hidden></div>
   <script type="module" src="./app.mjs"></script>
+  <script type="module" src="./backup-ui.mjs"></script>
 </body>
 </html>

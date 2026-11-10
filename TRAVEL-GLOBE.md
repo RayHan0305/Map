@@ -11,6 +11,7 @@
 | 2026-11-10 | `2d7df3923da44d954e21c6ce38e47818490bb979` | 5400×2700 NASA 真彩色卫星地球、WebGL 高清渲染、国界及中文大洲／国家／城市标注 |
 | 2026-11-10 | `53ed049e026d8be1964f1dba984a1001964ef9ea` | 贝Ki-Map 品牌与角色动画、国家到拍摄点的多级地图、滚轮进入街道、旅程往返定位、GPS 与旧版相册兼容 |
 | 2026-11-10 | `1f3950dea8b595d1cf0555e8710a54c504aa206a` | 粉蓝星空、三城实景示例、独立影集与可恢复的照片编辑 |
+| 2026-11-10 | `7c911c098034dfe2a539a23a4117d764e8dd4b9d` | 独立静态托管与跨域相册备份迁移 |
 
 源版本已通过浏览器验收，覆盖两地上传、同一地点补传、刷新后从标记打开相册，以及手机触控模拟下的手动选点和上传。部署版的访问权限由 Sites 管理。用户照片和浏览器中的相册记录保存在各自的设备上。
 
@@ -39,6 +40,16 @@ Chrome 桌面和手机尺寸触控模拟通过验收，覆盖三城镜头定位�
 - 大庆 · Jason Zhang · CC BY-SA 3.0。[照片来源](https://commons.wikimedia.org/wiki/File:Longfeng_Wetland_Park_observation_bridge_(2).jpg)
 
 现有 Sites 站点已设置为链接可访问。上传照片、原图及编辑保存在访问者当前浏览器的 IndexedDB 中。[贝Ki-Map](https://luji-earth-travel-album.honeypuppy20.chatgpt.site)
+
+## 独立部署与相册迁移
+
+独立版本使用 GitHub Pages。`main` 的 `dist/` 是可直接部署的静态文件，`gh-pages` 分支根目录放置相同文件和 `.nojekyll`。站点可以在仓库的 `/Map/` 子路径运行，图片和模块都使用相对路径。
+
+首次启用时，在仓库 Settings → Pages 下选择 `Deploy from a branch`，分支选 `gh-pages`，目录选 `/ (root)`，然后保存。部署成功后可打开首页和独立影集。后续发布将 `main` 的 `dist/` 文件同步到 `gh-pages` 根目录并保留 `.nojekyll`。[Pages 设置](https://github.com/RayHan0305/Map/settings/pages) · [独立首页](https://rayhan0305.github.io/Map/) · [伦敦示例影集](https://rayhan0305.github.io/Map/album.html?id=city-london)
+
+迁移时，用原先保存照片的浏览器打开旧站，点击页面底部的「相册备份与迁移」并导出 JSON。到新站打开同一菜单并导入该文件。导入保留地点、拍摄坐标、原图、日期、备注和编辑。重复记录保留目标浏览器中的版本。备份文件含私人照片和位置，导出与导入均在浏览器本地完成。[旧站迁移入口](https://luji-earth-travel-album.honeypuppy20.chatgpt.site/)
+
+Chrome 验收覆盖桌面和手机触控模拟、三城定位、星空动效偏好、地图与旅程往返、旋转裁剪、刷新后保留编辑和恢复原图。通过不同域名的本机服务器模拟 `/Map/` 部署，实测旧站导出、隔离的新站导入、错误文件拒绝、重复导入、原图校验和拍摄点与编辑保留。
 
 ## 本地预览
 

@@ -3,6 +3,7 @@ const placesStore = 'places';
 const photosStore = 'photos';
 const editsStore = 'photo-edits';
 const byPlaceIndex = 'byPlace';
+const backupStores = [placesStore, photosStore, editsStore];
 
 let connection;
 
@@ -95,6 +96,53 @@ export async function savePhotoEdit(id, edit) {
     resultOf(edit === null ? store.delete(id) : store.put({ ...edit, id })),
     transactionDone(transaction),
   ]);
+}
+
+export async function readBackupRecords() {
+  const database = await openDatabase();
+  const transaction = database.transaction(backupStores, 'readonly');
+  const [places, photos, edits] = await Promise.all([
+    ...backupStores.map((name) => resultOf(transaction.objectStore(name).getAll())),
+    transactionDone(transaction),
+  ]);
+  return { places, photos, edits };
+}
+
+export async function mergeBackupRecords({ places, photos, edits }) {
+  const database = await openDatabase();
+  const transaction = database.transaction(backupStores, 'readwrite');
+  const stores = backupStores.map((name) => transaction.objectStore(name));
+  const requests = stores.map((store) => store.getAllKeys());
+  let remaining = requests.length;
+  let counts;
+  let error;
+
+  for (const request of requests) {
+    request.onsuccess = () => {
+      if (--remaining !== 0) return;
+      const [placeKeys, photoKeys, editKeys] = requests.map(({ result }) => new Set(result));
+      const newPlaces = places.filter(({ id }) => !placeKeys.has(id));
+      const newPhotos = photos.filter(({ id }) => !photoKeys.has(id));
+      const newEdits = edits.filter(({ id }) => !editKeys.has(id) && !photoKeys.has(id));
+      counts = {
+        addedPlaces: newPlaces.length, skippedPlaces: places.length - newPlaces.length,
+        addedPhotos: newPhotos.length, skippedPhotos: photos.length - newPhotos.length,
+        addedEdits: newEdits.length, skippedEdits: edits.length - newEdits.length,
+      };
+      // Keep the read and queued writes in one transaction, including on engines
+      // that close idle transactions before a promise continuation can write.
+      try {
+        [newPlaces, newPhotos, newEdits].forEach((records, index) => {
+          for (const record of records) stores[index].add(record);
+        });
+      } catch (cause) {
+        error = cause;
+        transaction.abort();
+      }
+    };
+  }
+  await transactionDone(transaction).catch((cause) => { throw error ?? cause; });
+  return counts;
 }
 
 export async function savePhotos(place, files, { date = '', note = '', locations = [] } = {}) {

@@ -95,6 +95,7 @@ h1 span { color: #ad2a69; }
 .local-note { display: flex; align-items: center; gap: 6px; margin: 13px 2px 0; color: var(--muted); font-size: 11px; }
 .local-note .icon { width: 14px; height: 14px; }
 .atlas-notes { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 12px; }
+.backup-link { align-self: center; min-height: 32px; padding: 0 8px; font-size: 12px; }
 .map-sources { flex-wrap: wrap; }
 .map-sources a { color: #67488a; }
 
@@ -163,6 +164,15 @@ h1 span { color: #ad2a69; }
 dialog { max-height: calc(100dvh - 24px); color: var(--text); background: #fff9ff; border: 1px solid #d9bce6; border-radius: 23px; box-shadow: 0 20px 70px #45266660; }
 dialog::backdrop { background: #35214870; backdrop-filter: blur(4px); }
 .upload-dialog { width: min(540px, calc(100% - 22px)); padding: 21px; }
+.backup-dialog { width: min(520px, calc(100% - 22px)); padding: 21px; }
+.backup-dialog p { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.backup-section { padding: 13px; margin-bottom: 9px; background: #f7eaf8; border: 1px solid #e7cee9; border-radius: 14px; }
+.backup-section + .backup-section { background: #edf1ff; border-color: #d9def5; }
+.backup-section h3 { margin: 0 0 4px; font-size: 15px; }
+.backup-section input[type="file"] { display: block; max-width: 100%; margin-bottom: 12px; color: var(--text); }
+.backup-dialog .backup-status { margin-top: 13px; overflow-wrap: anywhere; }
+.backup-dialog .backup-status:empty { margin: 0; }
+.backup-status[data-error] { color: #862447; }
 .dialog-top { margin-bottom: 14px; }
 .dialog-top h2 { margin-bottom: 0; }
 .field-label { display: block; color: var(--text); font-size: 13px; font-weight: 750; margin: 0 0 6px; }
