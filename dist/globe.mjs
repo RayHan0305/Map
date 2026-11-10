@@ -5,6 +5,11 @@ const START = { lat: 25, lon: 105 };
 const TEXTURE_WIDTH = 1440;
 const TEXTURE_HEIGHT = 720;
 const TAU = Math.PI * 2;
+const MARKER_COLORS = {
+  saved: { halo: '#ffda7c20', dot: '#f8cc73', rim: '#fff0b99e', badge: '#151d35db', border: '#8ea5d545', text: '#e1e7fa' },
+  active: { halo: '#ffda7c32', ring: '#ffda7c78', dot: '#ffe5a4', rim: '#fff0b99e', badge: '#242c48', border: '#e2b76990', text: '#ffe6b1' },
+  draft: { halo: '#f06b9940', ring: '#f88ab8aa', dot: '#f06b99', rim: '#ffe0ec', badge: '#3c2947', border: '#f06b9999', text: '#ffe0ec' },
+};
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const longitude = (value) => ((value + 180) % 360 + 360) % 360 - 180;
 
@@ -13,8 +18,8 @@ function makeTexture() {
   texture.width = TEXTURE_WIDTH;
   texture.height = TEXTURE_HEIGHT;
   const context = texture.getContext('2d', { willReadFrequently: true });
-  context.fillStyle = '#3b5586';
-  context.strokeStyle = '#6383b5';
+  context.fillStyle = '#5b72a5';
+  context.strokeStyle = '#8498c9';
   context.lineWidth = 1.5;
   for (const ring of landRings) {
     for (const offset of [-360, 0, 360]) {
@@ -31,12 +36,12 @@ function makeTexture() {
     }
   }
   context.globalCompositeOperation = 'source-atop';
-  context.fillStyle = '#809bc04d';
+  context.fillStyle = '#a3b4dc4d';
   for (let y = 1; y < TEXTURE_HEIGHT; y += 5) {
     for (let x = 1 + y % 2 * 2.5; x < TEXTURE_WIDTH; x += 5) context.fillRect(x, y, 1.5, 1.5);
   }
   context.globalCompositeOperation = 'destination-over';
-  context.fillStyle = '#192b57';
+  context.fillStyle = '#38497f';
   context.fillRect(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT);
   context.globalCompositeOperation = 'source-over';
   context.beginPath();
@@ -96,6 +101,49 @@ export class TravelGlobe {
     this.invalidate();
   }
 
+  // Returns the point in canvas-local CSS pixels, even when it is on the far side.
+  project(lat, lon) {
+    if (!this.radius || !Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90) return null;
+    const viewLat = this.angles.lat * RAD;
+    const pointLat = lat * RAD;
+    const deltaLon = (lon - this.angles.lon) * RAD;
+    const sinLat = Math.sin(pointLat);
+    const cosLat = Math.cos(pointLat);
+    const baseZ = cosLat * Math.cos(deltaLon);
+    const depth = sinLat * Math.sin(viewLat) + baseZ * Math.cos(viewLat);
+    const x = this.cx + cosLat * Math.sin(deltaLon) * this.radius;
+    const y = this.cy - (sinLat * Math.cos(viewLat) - baseZ * Math.sin(viewLat)) * this.radius;
+    const visible = depth >= 0 && x >= 0 && y >= 0 && x <= this.width && y <= this.height;
+    return { x, y, depth, visible };
+  }
+
+  // Inverts project() on the visible globe surface, in the same pixel space.
+  unproject(x, y) {
+    if (!this.radius || !Number.isFinite(x) || !Number.isFinite(y)) return null;
+    if (x < 0 || y < 0 || x > this.width || y > this.height) return null;
+    const screenX = (x - this.cx) / this.radius;
+    const screenY = (this.cy - y) / this.radius;
+    const remaining = 1 - screenX * screenX - screenY * screenY;
+    if (remaining < -1e-12) return null;
+    const z = Math.sqrt(Math.max(0, remaining));
+    const viewLat = this.angles.lat * RAD;
+    const cosLat = Math.cos(viewLat);
+    const sinLat = Math.sin(viewLat);
+    const lat = Math.asin(clamp(screenY * cosLat + z * sinLat, -1, 1)) / RAD;
+    const lon = this.angles.lon + Math.atan2(screenX, z * cosLat - screenY * sinLat) / RAD;
+    return { lat, lon: longitude(lon) };
+  }
+
+  pickCenter() {
+    if (!this.picking || !this.radius) return;
+    this.flight = null;
+    this.onPick?.(this.getCenter());
+  }
+
+  getCenter() {
+    return { lat: this.angles.lat, lon: longitude(this.angles.lon) };
+  }
+
   setAutoRotate(enabled) {
     this.autoRotate = enabled;
     this.lastFrame = undefined;
@@ -134,7 +182,9 @@ export class TravelGlobe {
     this.canvas.height = Math.round(this.height * this.ratio);
     this.cx = this.width / 2;
     this.cy = this.height / 2;
-    this.radius = Math.min(this.width, this.height) * 0.426 * this.scale;
+    const shortEdge = Math.min(this.width, this.height);
+    const margin = clamp(shortEdge * 0.035, 10, 24);
+    this.radius = Math.max(1, shortEdge / 2 - margin) * this.scale;
     const size = Math.max(1, Math.min(560, Math.round(this.radius * 2 * this.ratio)));
     if (this.sphere.width !== size || this.sphere.height !== size || !this.spherePixels) {
       this.sphere.width = this.sphere.height = size;
@@ -224,53 +274,75 @@ export class TravelGlobe {
     context.beginPath();
     context.arc(cx, cy, radius, 0, TAU);
     context.stroke();
-    this.drawPlaces(cosLat, sinLat);
+    this.drawPlaces();
+    if (this.picking) this.drawReticle();
     if (this.flight || this.autoRotate) this.invalidate();
   }
 
-  drawPlaces(cosLat, sinLat) {
-    const { context, cx, cy, radius, width, height } = this;
+  drawReticle() {
+    const { context, cx, cy } = this;
+    context.save();
+    context.translate(cx, cy);
+    context.beginPath();
+    context.arc(0, 0, 10, 0, TAU);
+    context.moveTo(-16, 0);
+    context.lineTo(-7, 0);
+    context.moveTo(7, 0);
+    context.lineTo(16, 0);
+    context.moveTo(0, -16);
+    context.lineTo(0, -7);
+    context.moveTo(0, 7);
+    context.lineTo(0, 16);
+    context.strokeStyle = '#11192b';
+    context.lineWidth = 3.5;
+    context.stroke();
+    context.strokeStyle = '#ffe6a6';
+    context.lineWidth = 1.25;
+    context.stroke();
+    context.fillStyle = '#ffe6a6';
+    context.beginPath();
+    context.arc(0, 0, 1.65, 0, TAU);
+    context.fill();
+    context.restore();
+  }
+
+  drawPlaces() {
+    const { context, width } = this;
     this.markers = this.places.flatMap((place) => {
-      const lat = place.lat * RAD;
-      const deltaLon = (place.lon - this.angles.lon) * RAD;
-      const localX = Math.cos(lat) * Math.sin(deltaLon);
-      const baseZ = Math.cos(lat) * Math.cos(deltaLon);
-      const localY = Math.sin(lat) * cosLat - baseZ * sinLat;
-      const depth = Math.sin(lat) * sinLat + baseZ * cosLat;
-      const x = cx + localX * radius;
-      const y = cy - localY * radius;
-      if (depth < 0.025 || x < 0 || y < 0 || x > width || y > height) return [];
-      return [{ ...place, x, y, depth }];
-    }).sort((a, b) => Number(a.id === this.active) - Number(b.id === this.active) || a.depth - b.depth);
+      const point = this.project(place.lat, place.lon);
+      if (!point?.visible || point.depth < 0.025) return [];
+      const active = place.id === this.active;
+      const colors = place.draft ? MARKER_COLORS.draft : active ? MARKER_COLORS.active : MARKER_COLORS.saved;
+      return [{ ...place, ...point, emphasized: Boolean(active || place.draft), colors }];
+    }).sort((a, b) => Number(a.emphasized) - Number(b.emphasized) || a.depth - b.depth);
 
     const drawnLabels = [];
     for (const marker of this.markers) {
-      const { x, y } = marker;
-      const active = marker.id === this.active;
+      const { x, y, emphasized, colors } = marker;
       context.beginPath();
-      context.arc(x, y, active ? 17 : 10, 0, TAU);
-      context.fillStyle = active ? '#ffda7c32' : '#ffda7c20';
+      context.arc(x, y, emphasized ? 17 : 10, 0, TAU);
+      context.fillStyle = colors.halo;
       context.fill();
-      if (active) {
-        context.strokeStyle = '#ffda7c78';
+      if (colors.ring) {
+        context.strokeStyle = colors.ring;
         context.lineWidth = 1;
         context.stroke();
       }
       context.beginPath();
-      context.arc(x, y, active ? 5.5 : 4, 0, TAU);
-      context.fillStyle = active ? '#ffe5a4' : '#f8cc73';
+      context.arc(x, y, emphasized ? 5.5 : 4, 0, TAU);
+      context.fillStyle = colors.dot;
       context.fill();
-      context.strokeStyle = '#fff0b99e';
+      context.strokeStyle = colors.rim;
       context.lineWidth = 0.9;
       context.stroke();
     }
     for (const marker of [...this.markers].reverse()) {
-      const { x, y } = marker;
-      const active = marker.id === this.active;
-      if (!active && (this.picking || marker.depth < 0.32)) continue;
-      context.font = `${active ? '600' : '500'} ${active ? 12 : 11}px system-ui, sans-serif`;
+      const { x, y, emphasized, colors } = marker;
+      if (!emphasized && (this.picking || marker.depth < 0.32)) continue;
+      context.font = `${emphasized ? '600 12px' : '500 11px'} system-ui, sans-serif`;
       const name = Array.from(marker.name);
-      const label = `${name.length > 12 ? `${name.slice(0, 11).join('')}…` : marker.name}  ·  ${marker.count}`;
+      const shortName = name.length > 12 ? `${name.slice(0, 11).join('')}…` : marker.name;
+      const label = marker.draft ? shortName : `${shortName}  ·  ${marker.count}`;
       const labelWidth = Math.ceil(context.measureText(label).width) + 15;
       const left = x + labelWidth + 15 > width ? x - labelWidth - 12 : x + 12;
       const top = y - 11;
@@ -280,11 +352,11 @@ export class TravelGlobe {
       drawnLabels.push(marker.label);
       context.beginPath();
       context.roundRect(left, top, labelWidth, 22, 8);
-      context.fillStyle = active ? '#242c48' : '#151d35db';
+      context.fillStyle = colors.badge;
       context.fill();
-      context.strokeStyle = active ? '#e2b76990' : '#8ea5d545';
+      context.strokeStyle = colors.border;
       context.stroke();
-      context.fillStyle = active ? '#ffe6b1' : '#e1e7fa';
+      context.fillStyle = colors.text;
       context.textBaseline = 'middle';
       context.fillText(label, left + 7, y + 0.3);
     }
@@ -301,27 +373,21 @@ export class TravelGlobe {
     const x = clientX - rect.left;
     const y = clientY - rect.top;
     if (this.picking) {
-      const screenX = (x - this.cx) / this.radius;
-      const screenY = (this.cy - y) / this.radius;
-      const remaining = 1 - screenX * screenX - screenY * screenY;
-      if (remaining < 0) return;
-      const z = Math.sqrt(remaining);
-      const viewLat = this.angles.lat * RAD;
-      const lat = Math.asin(clamp(screenY * Math.cos(viewLat) + z * Math.sin(viewLat), -1, 1)) / RAD;
-      const lon = this.angles.lon + Math.atan2(screenX, z * Math.cos(viewLat) - screenY * Math.sin(viewLat)) / RAD;
-      this.onPick?.({ lat, lon: longitude(lon) });
+      const coordinates = this.unproject(x, y);
+      if (coordinates) this.onPick?.(coordinates);
       return;
     }
     let nearest;
     let distance = 19;
     for (const marker of [...this.markers].reverse()) {
+      if (marker.draft) continue;
       const nextDistance = Math.hypot(marker.x - x, marker.y - y);
       if (nextDistance < distance) {
         nearest = marker;
         distance = nextDistance;
       }
     }
-    const labeled = nearest || this.markers.find(({ label }) => label &&
+    const labeled = nearest || this.markers.find(({ draft, label }) => !draft && label &&
       x >= label.left && x <= label.left + label.width && y >= label.top && y <= label.top + 22);
     if (labeled) this.onSelect?.(labeled.id);
   }
@@ -378,6 +444,7 @@ export class TravelGlobe {
         '-': () => this.zoom(1 / 1.2),
         Home: () => this.reset(),
         Enter: () => {
+          if (this.picking) return this.pickCenter();
           const rect = canvas.getBoundingClientRect();
           this.choose(rect.left + this.cx, rect.top + this.cy);
         }

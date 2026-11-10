@@ -1,6 +1,11 @@
 import { TravelGlobe } from './globe.mjs';
 import { searchCities } from './cities.mjs';
 import { loadPlaces, savePhotos } from './storage.mjs';
+import { parseCoordinates, searchGlobalPlaces } from './geocoder.mjs';
+import { StreetMap } from './street-map.mjs';
+import { showIntro } from './intro.mjs';
+
+showIntro();
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('globe');
@@ -12,6 +17,8 @@ const lightbox = $('lightbox');
 const recordQuery = $('record-query');
 const recordResults = $('record-results');
 const cityQuery = $('city-query');
+const streetDialog = $('street-dialog');
+const streetCoordinates = $('street-coords');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 const samples = [
@@ -27,7 +34,8 @@ const places = new Map();
 const photoUrls = new Map();
 let activePlace = null;
 let rotation = !reducedMotion.matches;
-let choosingPoint = false;
+let choosingPoint = null;
+let streetMode = 'browse';
 let point = null;
 let selected = null;
 let previews = [];
@@ -39,14 +47,19 @@ let photoIndex = 0;
 const globe = new TravelGlobe(canvas, {
   onSelect: (id) => openAlbum(id),
   onPick: (position) => {
-    point = position;
+    const mode = choosingPoint;
     endPicking();
-    openUploadDialog();
-    showUploadStep('manual');
-    $('manual-coords').textContent = formatCoordinates(position);
-    $('place-name').focus();
+    choosePoint(position, mode);
   },
   onInteract: () => setRotation(false),
+});
+
+const streetMap = new StreetMap($('street-map'), {
+  onMove: setStreetCoordinates,
+  onStatus: (message) => {
+    $('street-status').textContent = message;
+    $('street-status').hidden = !message;
+  },
 });
 
 function element(tag, className, content) {
@@ -100,8 +113,8 @@ function placeById(id) {
 }
 
 function formatCoordinates({ lat, lon }) {
-  return (lat < 0 ? '南纬 ' : '北纬 ') + Math.abs(lat).toFixed(3) + '° · ' +
-    (lon < 0 ? '西经 ' : '东经 ') + Math.abs(lon).toFixed(3) + '°';
+  return (lat < 0 ? '南纬 ' : '北纬 ') + Math.abs(lat).toFixed(5) + '° · ' +
+    (lon < 0 ? '西经 ' : '东经 ') + Math.abs(lon).toFixed(5) + '°';
 }
 
 function placeOption(place, choose, withPhoto = false) {
@@ -131,7 +144,13 @@ function renderPlaces() {
   $('photo-total').textContent = [...places.values()].reduce((sum, place) => sum + place.photos.length, 0);
   $('place-list-count').textContent = all.length + ' 个地点';
   $('place-list').replaceChildren(...all.map((place) => placeOption(place, ({ id }) => openAlbum(id), true)));
-  globe.setPlaces(all.map(({ id, name, lat, lon, photos, demo }) => ({ id, name, lat, lon, count: photos.length, demo })));
+  renderMarkers();
+}
+
+function renderMarkers() {
+  const pins = knownPlaces().map(({ id, name, lat, lon, photos, demo }) => ({ id, name, lat, lon, count: photos.length, demo }));
+  if (activePlace?.draft) pins.push({ ...activePlace, count: 0 });
+  globe.setPlaces(pins);
 }
 
 function setCurrentRow(id) {
@@ -143,17 +162,26 @@ function setCurrentRow(id) {
 
 function openAlbum(id) {
   const place = placeById(id);
-  if (!place) return;
+  if (place) showPlace(place);
+}
+
+function showPlace(place) {
+  if (choosingPoint) endPicking();
   activePlace = place;
+  const { id, draft } = place;
   setRotation(false);
+  renderMarkers();
   globe.setActive(id);
   globe.focus(place.lat, place.lon);
   setCurrentRow(id);
   recordResults.hidden = true;
   $('album-title').textContent = place.name;
-  $('album-meta').replaceChildren(element('span', '', (place.region || formatCoordinates(place)) + ' · ' + place.photos.length + ' 张照片'));
+  const details = [place.region, draft ? '待添加照片' : place.photos.length + ' 张照片'].filter(Boolean);
+  $('album-meta').replaceChildren(element('span', '', details.join(' · ')));
+  $('album-coords').textContent = formatCoordinates(place);
+  $('refine-place').hidden = !draft;
   if (place.demo) $('album-meta').append(element('span', 'example', '示例'));
-  $('album-grid').replaceChildren(...place.photos.map((photo, index) => {
+  $('album-grid').replaceChildren(...(place.photos || []).map((photo, index) => {
     const button = element('button', 'thumbnail');
     button.type = 'button';
     button.setAttribute('aria-label', '查看第 ' + (index + 1) + ' 张照片');
@@ -171,32 +199,126 @@ function closeAlbum(restoreFocus = false) {
   activePlace = null;
   album.hidden = true;
   globe.setActive(null);
+  renderMarkers();
   setCurrentRow(null);
   if (restoreFocus) (row || canvas).focus({ preventScroll: true });
 }
 
-function renderRecordSearch() {
-  const query = recordQuery.value.trim().toLocaleLowerCase();
-  const cityMatches = new Set(query ? searchCities(query).map(({ id }) => id) : []);
-  const options = knownPlaces().filter(({ id, name, region }) =>
-    !query || (name + ' ' + region).toLocaleLowerCase().includes(query) || cityMatches.has(id));
-  recordResults.replaceChildren(...options.map((place) => placeOption(place, ({ id, name }) => {
-    recordQuery.value = name;
-    openAlbum(id);
-  })));
-  if (!options.length) recordResults.append(element('p', 'empty-results', '没有找到已记录的地点。'));
-  recordResults.hidden = false;
+function localMatches(query) {
+  const cities = searchCities(query);
+  const ids = new Set(cities.map(({ id }) => id));
+  const recorded = knownPlaces().filter(({ id, name, region }) =>
+    !query || (name + ' ' + region).toLocaleLowerCase().includes(query) || ids.has(id));
+  return uniquePlaces([...recorded, ...cities]).slice(0, 8);
 }
 
-function renderCitySearch() {
-  const query = cityQuery.value.trim().toLocaleLowerCase();
-  const matches = searchCities(query);
-  const ids = new Set(matches.map(({ id }) => id));
-  const local = [...places.values()].filter(({ id, name, region }) =>
-    !ids.has(id) && (!query || (name + ' ' + region).toLocaleLowerCase().includes(query)));
-  const options = [...local, ...matches].slice(0, 8);
-  $('city-results').replaceChildren(...options.map((place) => placeOption(place, selectLocation)));
-  if (!options.length && query) $('city-results').append(element('p', 'empty-results', '没有找到这个城市。你可以在地球上手动选点。'));
+function uniquePlaces(options) {
+  const byId = new Map();
+  for (const place of options) if (!byId.has(place.id)) byId.set(place.id, place);
+  return [...byId.values()];
+}
+
+function manualPlace(position) {
+  const { lat, lon } = position;
+  const wrappedLon = lon === 180 ? -180 : lon;
+  const id = 'pin-' + lat.toFixed(6) + '_' + wrappedLon.toFixed(6);
+  const legacy = 'pin-' + lat.toFixed(4) + '_' + lon.toFixed(4);
+  return placeById(id) || placeById(legacy) || { id, lat, lon: wrappedLon, name: '自定义地点', region: '', unnamed: true };
+}
+
+function choosePoint(position, mode) {
+  const place = manualPlace(position);
+  if (mode === 'upload') {
+    openUploadDialog();
+    if (place.unnamed) showManualLocation(place);
+    else selectLocation(place);
+  } else {
+    showPlace(place.photos ? place : { ...place, draft: true });
+  }
+}
+
+function showManualLocation(position) {
+  point = position;
+  showUploadStep('manual');
+  $('place-name').value = '';
+  $('manual-coords').textContent = formatCoordinates(position);
+  $('place-name').focus();
+}
+
+function setupSearch(input, results, submit, choose, popup = false) {
+  let request = null;
+  let lastQuery = null;
+  let lastResults = [];
+  const attribution = element('a', 'map-credit', '© OpenStreetMap contributors');
+  attribution.href = 'https://www.openstreetmap.org/copyright';
+  attribution.target = '_blank';
+  attribution.rel = 'noopener';
+
+  function render(options, message, credit = false) {
+    results.replaceChildren(...options.map((place) => placeOption(place, choose)));
+    if (message) results.append(element('p', 'empty-results', message));
+    if (credit) results.append(attribution);
+  }
+
+  function suggestions() {
+    request?.abort();
+    request = null;
+    const query = input.value.trim().toLocaleLowerCase();
+    const coords = parseCoordinates(query);
+    if (popup) results.hidden = false;
+    if (coords) render([manualPlace(coords)], '经纬度按「纬度, 经度」输入。');
+    else if (query && query === lastQuery) render(lastResults, '', true);
+    else render(query || popup ? localMatches(query) : [], query
+      ? '按回车或点搜索，查找全球地点。'
+      : '可输入地点、地址或纬度和经度。');
+  }
+
+  async function worldwide() {
+    const query = input.value.trim();
+    const coords = parseCoordinates(query);
+    if (coords) { choose(manualPlace(coords)); return; }
+    suggestions();
+    const local = localMatches(query.toLocaleLowerCase());
+    if (query.length < 2) {
+      render(local, '请输入至少两个字符，或输入纬度和经度。');
+      return;
+    }
+    const controller = new AbortController();
+    request = controller;
+    render(local, '正在查找全球地点…');
+    try {
+      const remote = await searchGlobalPlaces(query, { signal: controller.signal });
+      if (request !== controller) return;
+      // Prefer the already-used ID for an equivalent catalog city.
+      const normalized = (name) => name.normalize('NFKC').toLocaleLowerCase();
+      const remotePlaces = remote.map((place) => local.find((city) =>
+        city.id.startsWith('city-') && normalized(city.name) === normalized(place.name) &&
+        Math.hypot(city.lat - place.lat, city.lon - place.lon) < .12) || place);
+      lastQuery = query.toLocaleLowerCase();
+      lastResults = uniquePlaces([...remotePlaces, ...local]).slice(0, 10);
+      render(lastResults, lastResults.length ? '' : '没有匹配地点。试试更完整的地址，或直接在地图上选点。', true);
+    } catch {
+      if (request === controller) render(local, '全球搜索暂时不可用。你仍可用本地候选、地图或经纬度选点。');
+    } finally {
+      if (request === controller) request = null;
+    }
+  }
+
+  input.addEventListener('input', suggestions);
+  input.addEventListener('keydown', (event) => {
+    if (event.isComposing) return;
+    if (event.key === 'ArrowDown' || event.key === 'Enter') {
+      event.preventDefault();
+      if (event.key === 'Enter') void worldwide();
+      else results.querySelector('button')?.focus();
+    }
+  });
+  submit.addEventListener('click', worldwide);
+  if (popup) {
+    input.addEventListener('focus', suggestions);
+    input.addEventListener('click', () => { if (results.hidden) suggestions(); });
+  }
+  return suggestions;
 }
 
 function showUploadStep(step) {
@@ -209,6 +331,10 @@ function showUploadStep(step) {
 }
 
 function selectLocation(place) {
+  if (place.unnamed) {
+    showManualLocation(place);
+    return;
+  }
   selected = { id: place.id, name: place.name, region: place.region, lat: place.lat, lon: place.lon };
   const location = element('span', '', place.name);
   location.append(element('small', '', place.region || formatCoordinates(place)));
@@ -231,26 +357,28 @@ function openUploadDialog() {
 }
 
 function startUpload(place) {
+  if (choosingPoint) endPicking();
   setRotation(false);
   clearPreviews();
   form.reset();
   point = null;
   selected = null;
-  if (place) selectLocation(place);
+  if (place?.unnamed) showManualLocation(place);
+  else if (place) selectLocation(place);
   else {
     showUploadStep('search');
     renderCitySearch();
   }
   openUploadDialog();
-  (place ? $('files') : cityQuery).focus({ preventScroll: true });
+  (place?.unnamed ? $('place-name') : place ? $('files') : cityQuery).focus({ preventScroll: true });
 }
 
-function beginPicking() {
+function beginPicking(mode) {
   point = null;
   setRotation(false);
   closeAlbum();
-  upload.close();
-  choosingPoint = true;
+  if (upload.open) upload.close();
+  choosingPoint = mode;
   globe.setPicking(true);
   stage.classList.add('is-picking');
   $('picking-banner').hidden = false;
@@ -259,17 +387,22 @@ function beginPicking() {
 }
 
 function endPicking() {
-  choosingPoint = false;
+  choosingPoint = null;
   globe.setPicking(false);
   stage.classList.remove('is-picking');
   $('picking-banner').hidden = true;
 }
 
 function cancelPicking() {
+  const mode = choosingPoint;
   endPicking();
-  showUploadStep('search');
-  openUploadDialog();
-  cityQuery.focus();
+  if (mode === 'upload') {
+    showUploadStep('search');
+    openUploadDialog();
+    cityQuery.focus();
+  } else {
+    $('pick-on-globe').focus({ preventScroll: true });
+  }
 }
 
 function confirmManualLocation() {
@@ -280,8 +413,29 @@ function confirmManualLocation() {
     return;
   }
   if (!point) return;
-  const id = 'pin-' + point.lat.toFixed(4) + '_' + point.lon.toFixed(4);
-  selectLocation(placeById(id) || { id, name, region: '', ...point });
+  const place = manualPlace(point);
+  selectLocation(place.unnamed ? { id: place.id, lat: place.lat, lon: place.lon, name, region: '' } : place);
+}
+
+function setStreetCoordinates({ lat, lon }) {
+  $('street-lat').value = Number(lat.toFixed(6));
+  $('street-lon').value = Number(lon.toFixed(6));
+}
+
+function enteredStreetCoordinates() {
+  if (!streetCoordinates.reportValidity()) return null;
+  return { lat: $('street-lat').valueAsNumber, lon: $('street-lon').valueAsNumber };
+}
+
+function openStreetMap(mode) {
+  if (choosingPoint) endPicking();
+  streetMode = mode;
+  setRotation(false);
+  const location = mode === 'upload' ? point || selected : activePlace;
+  const position = location || globe.getCenter();
+  streetDialog.showModal();
+  streetMap.open(position, location ? 15 : 6);
+  setStreetCoordinates(position);
 }
 
 function showError(message) {
@@ -410,21 +564,36 @@ $('close-album').addEventListener('click', () => closeAlbum(true));
 $('close-upload').addEventListener('click', () => { if (!busy) upload.close(); });
 upload.addEventListener('cancel', (event) => { if (busy) event.preventDefault(); });
 form.addEventListener('submit', submitPhotos);
-cityQuery.addEventListener('input', renderCitySearch);
-cityQuery.addEventListener('keydown', (event) => {
-  if (event.key === 'ArrowDown' || event.key === 'Enter') {
-    event.preventDefault();
-    const first = $('city-results').querySelector('button');
-    if (event.key === 'Enter') first?.click();
-    else first?.focus();
-  }
-});
-$('start-picking').addEventListener('click', beginPicking);
-$('repick-location').addEventListener('click', beginPicking);
+const renderCitySearch = setupSearch(cityQuery, $('city-results'), $('search-world-upload'), selectLocation);
+setupSearch(recordQuery, recordResults, $('search-world'), (place) => {
+  recordQuery.value = place.unnamed ? '' : place.name;
+  showPlace(placeById(place.id) || { ...place, draft: true });
+}, true);
+$('pick-on-globe').addEventListener('click', () => beginPicking('browse'));
+$('start-picking').addEventListener('click', () => beginPicking('upload'));
+$('repick-location').addEventListener('click', () => beginPicking('upload'));
 $('cancel-picking').addEventListener('click', cancelPicking);
+$('open-detail-map').addEventListener('click', () => openStreetMap('browse'));
+$('refine-place').addEventListener('click', () => openStreetMap('browse'));
+$('upload-detail-map').addEventListener('click', () => openStreetMap('upload'));
+$('close-street').addEventListener('click', () => streetDialog.close());
+streetDialog.addEventListener('close', () => { if (!streetDialog.open) streetMap.close(); });
+$('street-zoom-in').addEventListener('click', () => streetMap.zoom(1));
+$('street-zoom-out').addEventListener('click', () => streetMap.zoom(-1));
+streetCoordinates.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const position = enteredStreetCoordinates();
+  if (position) streetMap.locate(position);
+});
+$('street-confirm').addEventListener('click', () => {
+  const position = enteredStreetCoordinates();
+  if (!position) return;
+  streetDialog.close();
+  choosePoint(position, streetMode);
+});
 $('confirm-location').addEventListener('click', confirmManualLocation);
 $('place-name').addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') {
+  if (event.key === 'Enter' && !event.isComposing) {
     event.preventDefault();
     confirmManualLocation();
   }
@@ -447,17 +616,6 @@ dropzone.addEventListener('drop', (event) => {
   addFiles(event.dataTransfer.files);
 });
 
-recordQuery.addEventListener('focus', renderRecordSearch);
-recordQuery.addEventListener('click', () => { if (recordResults.hidden) renderRecordSearch(); });
-recordQuery.addEventListener('input', renderRecordSearch);
-recordQuery.addEventListener('keydown', (event) => {
-  if (event.key === 'ArrowDown') {
-    event.preventDefault();
-    recordResults.querySelector('button')?.focus();
-  } else if (event.key === 'Enter' && !recordResults.hidden) {
-    recordResults.querySelector('button')?.click();
-  }
-});
 document.addEventListener('pointerdown', (event) => {
   if (!event.target.closest('.record-search')) recordResults.hidden = true;
 });
@@ -465,7 +623,7 @@ document.querySelector('.record-search').addEventListener('focusout', (event) =>
   if (!event.currentTarget.contains(event.relatedTarget)) recordResults.hidden = true;
 });
 document.addEventListener('keydown', (event) => {
-  if (event.key !== 'Escape' || upload.open || lightbox.open) return;
+  if (event.key !== 'Escape' || upload.open || lightbox.open || streetDialog.open) return;
   if (choosingPoint) cancelPicking();
   else if (!recordResults.hidden) recordResults.hidden = true;
   else if (!album.hidden) closeAlbum(true);

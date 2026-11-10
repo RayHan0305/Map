@@ -68,7 +68,7 @@
     <circle cx="184" cy="171" r="1.1" fill="#ffda9c"/>
   </g>
 
-  <g transform="translate(126 162) rotate(-12) scale(.73)" color="#8cdd87">
+  <g id="buttercup" transform="translate(126 162) rotate(-12) scale(.73)" color="#8cdd87">
     <use href="#flying-body"/>
     <path fill="#242336" stroke="#1a1326" stroke-width="2.7" stroke-linejoin="round" d="M-48-3C-52-20-41-36-23-41-5-49 19-44 34-31 45-24 50-8 44 5L48 17 34 11 29 17-31 18-43 13-53 15-47 6Z"/>
     <use href="#face"/>
@@ -76,7 +76,7 @@
     <path d="M-32-30Q-22-37-10-38M-4-39H3" stroke="#56506a" stroke-width="1.6" stroke-linecap="round"/>
   </g>
 
-  <g transform="translate(252 111) rotate(-9) scale(.76)" color="#80c7f5">
+  <g id="bubbles" transform="translate(252 111) rotate(-9) scale(.76)" color="#80c7f5">
     <use href="#flying-body"/>
     <g fill="#ffd15a" stroke="#482740" stroke-width="2.6" stroke-linejoin="round">
       <path d="M-34-21C-44-37-64-35-70-22-74-13-70-3-65 0L-64-8Q-60 5-49 6L-53-2Q-41 0-36-9Z"/>
@@ -88,7 +88,7 @@
     <path d="M-30-29Q-20-35-10-36M-4-36H1" stroke="#ffea99" stroke-width="1.8" stroke-linecap="round"/>
   </g>
 
-  <g transform="translate(388 59) rotate(-8) scale(.79)" color="#f58cab">
+  <g id="blossom" transform="translate(388 59) rotate(-8) scale(.79)" color="#f58cab">
     <use href="#flying-body"/>
     <path fill="#ef824c" stroke="#4d283b" stroke-width="2.7" stroke-linejoin="round" d="M-41-10Q-50 9-62 22L-54 21Q-65 28-75 29L-66 33-77 37Q-55 41-38 32L-42 38Q-22 39-11 24L31-12Q22-34-7-34-26-33-41-10Z"/>
     <path fill="#ef824c" stroke="#4d283b" stroke-width="2.6" d="M-44-7Q-45-30-24-37 4-46 28-32 43-26 46-8Z"/>
