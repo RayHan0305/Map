@@ -37,7 +37,14 @@ function photonPlace(feature) {
   const region = Array.from(new Set([address, ...area].filter((part) => part && part !== name))).join(' · ');
   const id = osmType && osmId != null ? `${osmType}-${osmId}` : coordinateKey(lat, lon);
   const house = type === 'house' && housenumber ? `-${housenumber}` : '';
-  return { id: `osm-${id}${house}`, name, region, lat, lon };
+  const isCity = ['city', 'town', 'village', 'hamlet'].includes(type);
+  const exact = Boolean(type && !isCity && !['country', 'state', 'county', 'district', 'postcode'].includes(type));
+  const cityName = isCity ? name : properties.city;
+  const cityArea = [properties.state, properties.country || properties.countrycode].filter(Boolean).join(' · ');
+  return {
+    id: `osm-${id}${house}`, name, region, lat, lon, exact, isCity, isCountry: type === 'country',
+    ...(cityName && { cityHint: { name: cityName, region: cityArea } }),
+  };
 }
 
 export async function searchGlobalPlaces(query, { signal } = {}) {

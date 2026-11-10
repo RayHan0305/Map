@@ -5,11 +5,22 @@ const START = { lat: 25, lon: 105 };
 const TEXTURE_WIDTH = 1440;
 const TEXTURE_HEIGHT = 720;
 const TAU = Math.PI * 2;
+const MIN_ZOOM = 0.65;
+const MAX_ZOOM = 3.4;
+const STREET_SCROLL_DISTANCE = 90;
+const STREET_SCROLL_WINDOW = 300;
+const STREET_SCROLL_COOLDOWN = 650;
+export const DETAIL_ZOOM = 1.85;
 const MARKER_COLORS = {
   saved: { halo: '#ffda7c20', dot: '#f8cc73', rim: '#fff0b99e', badge: '#151d35db', border: '#8ea5d545', text: '#e1e7fa' },
   active: { halo: '#ffda7c32', ring: '#ffda7c78', dot: '#ffe5a4', rim: '#fff0b99e', badge: '#242c48', border: '#e2b76990', text: '#ffe6b1' },
+  detail: { halo: '#a3f1d432', ring: '#a3f1d497', dot: '#b6f7dd', rim: '#e4fff2', badge: '#193b3e', border: '#a3f1d47c', text: '#d9fff1' },
   draft: { halo: '#f06b9940', ring: '#f88ab8aa', dot: '#f06b99', rim: '#ffe0ec', badge: '#3c2947', border: '#f06b9999', text: '#ffe0ec' },
 };
+const DETAIL_OFFSETS = [16, 32, 48].flatMap((distance) => Array.from({ length: 8 }, (_, index) => {
+  const angle = index * TAU / 8;
+  return [distance * Math.cos(angle), distance * Math.sin(angle)];
+}));
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const longitude = (value) => ((value + 180) % 360 + 360) % 360 - 180;
 const DAY_GAMMA = 0.78;
@@ -224,12 +235,16 @@ function makeTexture() {
 }
 
 export class TravelGlobe {
-  constructor(canvas, { onSelect, onPick, onInteract }) {
+  constructor(canvas, { onSelect, onPick, onInteract, findCountry, onCountry, onStreetZoom }) {
     this.canvas = canvas;
     this.context = canvas.getContext('2d');
     this.onSelect = onSelect;
     this.onPick = onPick;
     this.onInteract = onInteract;
+    this.findCountry = findCountry;
+    this.onCountry = onCountry;
+    this.onStreetZoom = onStreetZoom;
+    this.streetScroll = { distance: 0, lastAt: -Infinity, readyAt: 0 };
     this.angles = { ...START };
     this.scale = 1;
     this.places = [];
@@ -349,31 +364,47 @@ export class TravelGlobe {
     return { lat: this.angles.lat, lon: longitude(this.angles.lon) };
   }
 
+  getZoom() {
+    return this.scale;
+  }
+
   setAutoRotate(enabled) {
     this.autoRotate = enabled;
     this.lastFrame = undefined;
     this.invalidate();
   }
 
-  focus(lat, lon) {
+  focus(lat, lon, { scale = this.scale } = {}) {
     this.setAutoRotate(false);
+    const targetScale = Number.isFinite(scale) ? clamp(scale, MIN_ZOOM, MAX_ZOOM) : this.scale;
     if (this.motion.matches) {
       this.angles = { lat, lon };
+      this.applyZoom(targetScale);
       this.flight = null;
     } else {
-      this.flight = { start: performance.now(), from: { ...this.angles }, lat, lon };
+      this.flight = { start: performance.now(), from: { ...this.angles, scale: this.scale }, lat, lon, scale: targetScale };
     }
     this.invalidate();
   }
 
   zoom(factor) {
-    this.scale = clamp(this.scale * factor, 0.65, 2.15);
-    this.resize();
+    if (!Number.isFinite(factor) || factor <= 0) return;
+    if (this.flight) {
+      const { lat, lon, scale } = this.flight;
+      this.focus(lat, lon, { scale: scale * factor });
+      return;
+    }
+    this.applyZoom(clamp(this.scale * factor, MIN_ZOOM, MAX_ZOOM));
+    this.invalidate();
+  }
+
+  applyZoom(scale) {
+    this.scale = scale;
+    this.radius = this.fitRadius * scale;
   }
 
   reset() {
-    this.scale = 1;
-    this.resize();
+    this.applyZoom(1);
     this.focus(START.lat, START.lon);
   }
 
@@ -391,7 +422,8 @@ export class TravelGlobe {
     this.cy = this.height / 2;
     const shortEdge = Math.min(this.width, this.height);
     const margin = clamp(shortEdge * 0.035, 10, 24);
-    this.radius = Math.max(1, shortEdge / 2 - margin) * this.scale;
+    this.fitRadius = Math.max(1, shortEdge / 2 - margin);
+    this.applyZoom(this.scale);
     this.invalidate();
   }
 
@@ -423,10 +455,11 @@ export class TravelGlobe {
     this.frame = 0;
     if (!this.radius) return;
     if (this.flight) {
-      const { from, lat, lon, start } = this.flight;
+      const { from, lat, lon, start, scale } = this.flight;
       const progress = clamp((now - start) / 620, 0, 1);
       const ease = (1 - Math.cos(Math.PI * progress)) / 2;
       this.angles = { lat: from.lat + (lat - from.lat) * ease, lon: longitude(from.lon + longitude(lon - from.lon) * ease) };
+      this.applyZoom(progress === 1 ? scale : from.scale * (scale / from.scale) ** ease);
       if (progress === 1) this.flight = null;
     } else if (this.autoRotate && this.lastFrame !== undefined) {
       const elapsed = Math.min(50, now - this.lastFrame);
@@ -527,29 +560,70 @@ export class TravelGlobe {
   }
 
   drawPlaces() {
-    const { context, width } = this;
+    const { context, width, height } = this;
+    const details = [];
     this.markers = this.places.flatMap((place) => {
+      if (place.detail && this.scale < DETAIL_ZOOM) return [];
       const point = this.project(place.lat, place.lon);
       if (!point?.visible || point.depth < 0.025) return [];
       const active = place.id === this.active;
-      const colors = place.draft ? MARKER_COLORS.draft : active ? MARKER_COLORS.active : MARKER_COLORS.saved;
-      return [{ ...place, ...point, emphasized: Boolean(active || place.draft), colors }];
-    }).sort((a, b) => Number(a.emphasized) - Number(b.emphasized) || a.depth - b.depth);
+      const style = place.draft ? 'draft' : place.detail ? 'detail' : active ? 'active' : 'saved';
+      const marker = { ...place, ...point, emphasized: Boolean(active || place.draft), colors: MARKER_COLORS[style] };
+      if (place.detail) {
+        const clearsDetails = (x, y) => details.every((other) => Math.hypot(other.x - x, other.y - y) >= 14);
+        if (!clearsDetails(point.x, point.y)) {
+          // Separate coincident display pins while preserving their geographic anchor.
+          const offset = DETAIL_OFFSETS.find(([dx, dy]) => {
+            const x = point.x + dx;
+            const y = point.y + dy;
+            return x >= 8 && y >= 8 && x <= width - 8 && y <= height - 8 &&
+              Math.hypot(x - this.cx, y - this.cy) <= this.radius - 5 && clearsDetails(x, y);
+          });
+          if (offset) {
+            marker.anchor = point;
+            marker.x += offset[0];
+            marker.y += offset[1];
+          }
+        }
+        details.push(marker);
+      }
+      return [marker];
+    }).sort((a, b) => Number(Boolean(a.detail)) - Number(Boolean(b.detail)) ||
+      Number(a.emphasized) - Number(b.emphasized) || a.depth - b.depth);
 
     const drawnLabels = [];
     for (const marker of this.markers) {
-      const { x, y, emphasized, colors } = marker;
-      context.beginPath();
-      context.arc(x, y, emphasized ? 17 : 10, 0, TAU);
-      context.fillStyle = colors.halo;
-      context.fill();
-      if (colors.ring) {
+      const { x, y, emphasized, colors, anchor } = marker;
+      if (anchor) {
+        context.beginPath();
+        context.moveTo(anchor.x, anchor.y);
+        context.lineTo(x, y);
         context.strokeStyle = colors.ring;
         context.lineWidth = 1;
         context.stroke();
       }
       context.beginPath();
-      context.arc(x, y, emphasized ? 5.5 : 4, 0, TAU);
+      context.arc(x, y, emphasized ? 17 : 10, 0, TAU);
+      context.fillStyle = colors.halo;
+      context.fill();
+      const overlappingDetail = !marker.detail && details.some((detail) => Math.hypot(detail.x - x, detail.y - y) < 8);
+      const ring = colors.ring || (overlappingDetail ? '#ffda7c94' : null);
+      if (ring) {
+        context.strokeStyle = ring;
+        context.lineWidth = 1;
+        context.stroke();
+      }
+      const dot = emphasized ? 5.5 : 4;
+      context.beginPath();
+      if (marker.detail) {
+        context.moveTo(x, y - dot - 1);
+        context.lineTo(x + dot + 1, y);
+        context.lineTo(x, y + dot + 1);
+        context.lineTo(x - dot - 1, y);
+        context.closePath();
+      } else {
+        context.arc(x, y, dot, 0, TAU);
+      }
       context.fillStyle = colors.dot;
       context.fill();
       context.strokeStyle = colors.rim;
@@ -564,11 +638,23 @@ export class TravelGlobe {
       const shortName = name.length > 12 ? `${name.slice(0, 11).join('')}…` : marker.name;
       const label = marker.draft ? shortName : `${shortName}  ·  ${marker.count}`;
       const labelWidth = Math.ceil(context.measureText(label).width) + 15;
-      const left = x + labelWidth + 15 > width ? x - labelWidth - 12 : x + 12;
-      const top = y - 11;
-      const overlaps = drawnLabels.some((item) => left < item.left + item.width + 4 && left + labelWidth > item.left - 4 && Math.abs(top - item.top) < 24);
-      if (overlaps) continue;
-      marker.label = { left, top, width: labelWidth };
+      const right = x + 12;
+      const leftOfPin = x - labelWidth - 12;
+      const rightFits = right + labelWidth <= width - 2;
+      const firstSide = rightFits && !(details.length && !marker.detail && emphasized) ? right : leftOfPin;
+      const otherSide = firstSide === right ? leftOfPin : right;
+      const positions = details.length ? [y - 11, y + 13, y - 35].flatMap((top) =>
+        [firstSide, otherSide].map((left) => ({ left, top }))) : [{ left: firstSide, top: y - 11 }];
+      const position = positions.find(({ left, top }) => {
+        if (left < 0 || top < 0 || left + labelWidth > width || top + 22 > height) return false;
+        const overlaps = drawnLabels.some((item) => left < item.left + item.width + 4 && left + labelWidth > item.left - 4 && Math.abs(top - item.top) < 24);
+        const coversPin = details.length && this.markers.some((other) => other.x >= left - 5 && other.x <= left + labelWidth + 5 &&
+          other.y >= top - 5 && other.y <= top + 27);
+        return !overlaps && !coversPin;
+      });
+      if (!position) continue;
+      const { left, top } = position;
+      marker.label = { ...position, width: labelWidth };
       drawnLabels.push(marker.label);
       context.beginPath();
       context.roundRect(left, top, labelWidth, 22, 8);
@@ -578,7 +664,7 @@ export class TravelGlobe {
       context.stroke();
       context.fillStyle = colors.text;
       context.textBaseline = 'middle';
-      context.fillText(label, left + 7, y + 0.3);
+      context.fillText(label, left + 7, top + 11.3);
     }
   }
 
@@ -598,18 +684,58 @@ export class TravelGlobe {
       return;
     }
     let nearest;
+    let labelHit;
     let distance = 19;
     for (const marker of [...this.markers].reverse()) {
-      if (marker.draft) continue;
+      if (marker.draft || (marker.detail && this.scale < DETAIL_ZOOM)) continue;
+      const { label } = marker;
+      if (label && x >= label.left && x <= label.left + label.width && y >= label.top && y <= label.top + 22) {
+        labelHit = marker;
+      }
       const nextDistance = Math.hypot(marker.x - x, marker.y - y);
-      if (nextDistance < distance) {
+      const score = nextDistance - (marker.detail ? 3 : 0);
+      if (nextDistance < 19 && score < distance) {
         nearest = marker;
-        distance = nextDistance;
+        distance = score;
       }
     }
-    const labeled = nearest || this.markers.find(({ draft, label }) => !draft && label &&
-      x >= label.left && x <= label.left + label.width && y >= label.top && y <= label.top + 22);
-    if (labeled) this.onSelect?.(labeled.id);
+    const selected = this.scale >= DETAIL_ZOOM ? labelHit || nearest : nearest || labelHit;
+    if (selected) {
+      this.onSelect?.(selected.id);
+      return;
+    }
+    if (this.onCountry && this.findCountry) {
+      const coordinates = this.unproject(x, y);
+      if (!coordinates) return;
+      const country = this.findCountry(coordinates.lat, coordinates.lon);
+      if (country) this.onCountry(country);
+    }
+  }
+
+  handleWheel(event) {
+    event.preventDefault();
+    this.interact();
+    const units = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? this.height : 1;
+    const delta = event.deltaY * units;
+    const scroll = this.streetScroll;
+    if (delta >= 0 || this.scale < MAX_ZOOM || this.picking || !this.onStreetZoom) {
+      scroll.distance = 0;
+      this.zoom(Math.exp(clamp(-delta * 0.0013, -0.3, 0.3)));
+      return;
+    }
+
+    const now = performance.now();
+    if (now < scroll.readyAt) return;
+    if (now - scroll.lastAt > STREET_SCROLL_WINDOW) scroll.distance = 0;
+    scroll.lastAt = now;
+    scroll.distance -= delta;
+    if (scroll.distance < STREET_SCROLL_DISTANCE) return;
+
+    scroll.distance = 0;
+    scroll.readyAt = now + STREET_SCROLL_COOLDOWN;
+    const rect = this.canvas.getBoundingClientRect();
+    const coordinates = this.unproject(event.clientX - rect.left, event.clientY - rect.top);
+    this.onStreetZoom(coordinates || this.getCenter());
   }
 
   bindInput() {
@@ -649,11 +775,7 @@ export class TravelGlobe {
       // Handle the click before opening a panel so a touch tap cannot hit the new UI.
       if (!this.dragged && !this.pointers.size) this.choose(event.clientX, event.clientY);
     });
-    canvas.addEventListener('wheel', (event) => {
-      event.preventDefault();
-      this.interact();
-      this.zoom(Math.exp(clamp(-event.deltaY * 0.0013, -0.3, 0.3)));
-    }, { passive: false });
+    canvas.addEventListener('wheel', (event) => this.handleWheel(event), { passive: false });
     canvas.addEventListener('keydown', (event) => {
       const actions = {
         ArrowLeft: () => this.angles.lon = longitude(this.angles.lon + 10),

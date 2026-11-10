@@ -1,102 +1,216 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 225" fill="none" role="img" aria-labelledby="title">
-  <title id="title">毛毛、泡泡和花花飞过夜空</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 470 230" fill="none" role="img" aria-labelledby="mascot-title">
+  <title id="mascot-title">三位卡通飞行伙伴掠过星空</title>
+  <style>
+    .wingmate, .eyes, .glimmer { transform-box: fill-box; transform-origin: center; }
+    .wingmate--green { animation: flutter-green 6.2s ease-in-out infinite; }
+    .wingmate--blue { animation: flutter-blue 5.6s ease-in-out infinite; }
+    .wingmate--pink { animation: flutter-pink 6.8s ease-in-out infinite; }
+    .eyes { animation: blink 6s linear infinite; }
+    .eyes--green { animation-delay: .7s; }
+    .eyes--blue { animation-delay: 1.8s; }
+    .comet { stroke-dasharray: .055 .945; animation: pulse-trail 4.1s linear infinite; }
+    .comet--blue { animation-delay: -1.9s; }
+    .comet--pink { animation-delay: -3s; }
+    .glimmer { animation: glimmer 3.9s ease-in-out infinite; }
+    .glimmer--late { animation-delay: -1.8s; }
+    @keyframes flutter-green {
+      0%, 100% { transform: translate(-3px, 2px) rotate(-2deg); }
+      46% { transform: translate(8px, -7px) rotate(5deg); }
+      77% { transform: translate(2px, 1px) rotate(1deg); }
+    }
+    @keyframes flutter-blue {
+      0%, 100% { transform: translate(2px, 2px) rotate(1deg); }
+      37% { transform: translate(8px, -7px) rotate(-3deg); }
+      71% { transform: translate(-6px, -3px) rotate(2deg); }
+    }
+    @keyframes flutter-pink {
+      0%, 100% { transform: translate(0, 3px) rotate(1deg); }
+      38% { transform: translate(5px, -6px) rotate(-3deg); }
+      72% { transform: translate(-5px, -1px) rotate(2deg); }
+    }
+    @keyframes blink {
+      0%, 47%, 51%, 100% { transform: scaleY(1); }
+      49% { transform: scaleY(.06); }
+    }
+    @keyframes pulse-trail {
+      0% { stroke-dashoffset: 1; opacity: 0; }
+      15%, 81% { opacity: .8; }
+      100% { stroke-dashoffset: .06; opacity: 0; }
+    }
+    @keyframes glimmer {
+      0%, 100% { opacity: .55; transform: scale(.82); }
+      52% { opacity: 1; transform: scale(1.08); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .wingmate, .eyes, .comet, .glimmer { animation: none; }
+      .comet { display: none; }
+    }
+  </style>
+
   <defs>
-    <linearGradient id="pink" x1="168" y1="135" x2="354" y2="68" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#fc8fab" stop-opacity="0"/>
-      <stop offset="1" stop-color="#fc8fab" stop-opacity=".8"/>
+    <linearGradient id="trail-pink">
+      <stop stop-color="#f3a2cf" stop-opacity="0"/>
+      <stop offset=".66" stop-color="#f3a2cf" stop-opacity=".48"/>
+      <stop offset="1" stop-color="#ff9ed0" stop-opacity=".9"/>
     </linearGradient>
-    <linearGradient id="blue" x1="52" y1="178" x2="222" y2="124" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#a3ccff" stop-opacity="0"/>
-      <stop offset="1" stop-color="#a3ccff" stop-opacity=".8"/>
+    <linearGradient id="trail-blue">
+      <stop stop-color="#a3d4ff" stop-opacity="0"/>
+      <stop offset=".66" stop-color="#a3d4ff" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#a6deff" stop-opacity=".88"/>
     </linearGradient>
-    <linearGradient id="green" x1="9" y1="201" x2="105" y2="171" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#99e3b0" stop-opacity="0"/>
-      <stop offset="1" stop-color="#99e3b0" stop-opacity=".7"/>
+    <linearGradient id="trail-green">
+      <stop stop-color="#a1edbd" stop-opacity="0"/>
+      <stop offset=".65" stop-color="#a1edbd" stop-opacity=".43"/>
+      <stop offset="1" stop-color="#adf2c4" stop-opacity=".84"/>
     </linearGradient>
-    <path id="spark" d="M0-6.7 1.65-1.65 6.7 0 1.65 1.65 0 6.7-1.65 1.65-6.7 0-1.65-1.65Z"/>
-    <clipPath id="face-clip">
-      <path d="M-41-3C-42-21-28-32-4-33 21-35 42-22 43-5 45 14 31 29 6 32-18 35-39 22-41-3Z"/>
-    </clipPath>
-    <g id="flying-body" stroke="#211329" stroke-width="2.7" stroke-linejoin="round">
-      <path fill="#fcf2f5" d="M-20 31Q-35 35-47 39-52 42-50 47-48 50-43 49-28 46-16 38Z"/>
-      <path fill="#211329" d="M-46 39Q-52 40-53 44-54 48-49 50-46 51-42 49-46 46-46 39Z"/>
-      <path fill="#fcf2f5" d="M-13 37Q-22 46-31 50-35 54-30 58-26 61-22 58-11 50-7 41Z"/>
-      <path fill="#211329" d="M-31 50Q-36 53-33 57-28 62-22 58-28 56-28 48Z"/>
-      <path fill="#fbd0ab" d="M-21 24Q-32 20-40 25-45 28-43 32-41 36-35 33-30 30-24 32Z"/>
-      <path fill="currentColor" d="M-25 22Q-11 22-4 31L-13 48Q-25 49-34 41L-29 29Z"/>
-      <path fill="#211329" stroke="none" d="M-29 32Q-20 40-9 39L-12 44Q-25 43-31 38Z"/>
-      <path fill="#fbd0ab" d="M-9 31Q-1 27 5 28 11 29 10 34 9 39 2 39L-12 39Q-18 36-9 31Z"/>
-    </g>
-    <g id="face" stroke="#211329" stroke-width="2.7" stroke-linejoin="round">
-      <path fill="#ffdbb6" d="M-41-3C-42-21-28-32-4-33 21-35 42-22 43-5 45 14 31 29 6 32-18 35-39 22-41-3Z"/>
-      <g clip-path="url(#face-clip)">
-        <ellipse cx="-18" cy="4" rx="21.3" ry="22.6" fill="#fffaf5"/>
-        <ellipse cx="26" cy="3" rx="19.7" ry="22" fill="#fffaf5"/>
-        <ellipse cx="-12.3" cy="5.2" rx="15.1" ry="20.7" fill="currentColor" stroke="none"/>
-        <ellipse cx="32.5" cy="4" rx="14.2" ry="20" fill="currentColor" stroke="none"/>
-        <ellipse cx="-9.2" cy="4.7" rx="11.2" ry="16.5" fill="#211329" stroke="none"/>
-        <ellipse cx="35" cy="3.5" rx="10.8" ry="15.9" fill="#211329" stroke="none"/>
-        <ellipse cx="-11" cy="-1" rx="5" ry="6.7" fill="#fffaf5" stroke="none"/>
-        <ellipse cx="33.2" cy="-2.1" rx="4.7" ry="6.5" fill="#fffaf5" stroke="none"/>
-        <circle cx="-4.7" cy="11.5" r="1.6" fill="#fffaf5" stroke="none"/>
-        <circle cx="39.2" cy="10.2" r="1.6" fill="#fffaf5" stroke="none"/>
+    <linearGradient id="green-eye" x2="0" y2="1">
+      <stop stop-color="#4cb46d"/><stop offset="1" stop-color="#9eee78"/>
+    </linearGradient>
+    <linearGradient id="blue-eye" x2="0" y2="1">
+      <stop stop-color="#4a98e7"/><stop offset="1" stop-color="#8bdeff"/>
+    </linearGradient>
+    <linearGradient id="pink-eye" x2="0" y2="1">
+      <stop stop-color="#db6194"/><stop offset="1" stop-color="#ff9fc0"/>
+    </linearGradient>
+    <linearGradient id="skin" x2=".27" y2="1">
+      <stop stop-color="#fff0ce"/><stop offset="1" stop-color="#ffcca6"/>
+    </linearGradient>
+    <linearGradient id="yellow-hair" x2=".18" y2="1">
+      <stop stop-color="#ffe894"/><stop offset="1" stop-color="#f5b94e"/>
+    </linearGradient>
+    <linearGradient id="orange-hair" x2=".18" y2="1">
+      <stop stop-color="#ffb775"/><stop offset="1" stop-color="#f16e53"/>
+    </linearGradient>
+    <path id="sparkle" d="M0-8C1.4-2.9 2.9-1.4 8 0 2.9 1.4 1.4 2.9 0 8-1.4 2.9-2.9 1.4-8 0-2.9-1.4-1.4-2.9 0-8Z"/>
+    <path id="flight-green" d="M-1 215C43 223 80 203 119 168"/>
+    <path id="flight-blue" d="M38 192C111 209 173 165 253 117"/>
+    <path id="flight-pink" d="M128 139C223 154 299 118 383 62"/>
+
+    <g id="buttercup" stroke="#211630" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-23 37Q-43 39-56 42-63 44-62 51-61 55-54 55-38 53-17 45Z" fill="#fff8f3"/>
+      <path d="M-55 41Q-66 41-67 47-68 53-61 55L-55 55Q-59 49-55 41Z" fill="#241931"/>
+      <path d="M-10 42Q-24 48-32 57-37 62-32 66-29 69-24 66-10 57-3 47Z" fill="#fff8f3"/>
+      <path d="M-30 55Q-38 60-34 66-29 71-23 65-30 63-30 55Z" fill="#241931"/>
+      <path d="M-37 26Q-30 22-21 27-11 34-5 41L-14 52Q-30 54-41 43Z" fill="#7fd38b"/>
+      <path d="M-39 35Q-25 45-10 46L-14 51Q-29 49-41 42Z" fill="#211630" stroke="none"/>
+      <path d="M-13 36Q4 37 13 30 20 25 28 26 36 29 33 35 29 41 21 39 12 46-6 45Z" fill="url(#skin)"/>
+      <path d="M-51 12C-58-5-55-25-42-39-30-52-12-55 8-52 30-49 48-35 53-20 58-7 56 6 51 14L56 24 43 19 38 25-35 25-45 20-56 24Z" fill="#282537"/>
+      <path d="M-46-3C-47-25-28-41-4-43 25-45 46-31 50-11 55 14 41 34 15 40-11 46-44 32-46-3Z" fill="url(#skin)"/>
+      <g class="eyes eyes--green">
+        <path d="M-42 1C-44-15-32-24-18-24-3-25 9-15 9 1 9 19-3 31-19 32-31 32-41 19-42 1Z" fill="#fffaf7"/>
+        <path d="M12-2C11-17 22-25 34-23 45-21 51-11 49 2 48 17 40 27 29 28 19 28 12 16 12-2Z" fill="#fffaf7"/>
+        <ellipse cx="-12" cy="4" rx="18.2" ry="25.6" fill="url(#green-eye)" stroke="none"/>
+        <ellipse cx="34" cy="2" rx="13.8" ry="23.9" fill="url(#green-eye)" stroke="none"/>
+        <ellipse cx="-9" cy="2.7" rx="13.6" ry="21.2" fill="#211630" stroke="none"/>
+        <ellipse cx="36.1" cy=".8" rx="10.3" ry="19.8" fill="#211630" stroke="none"/>
+        <ellipse cx="-12" cy="-5" rx="6" ry="8" fill="#fffaf7" stroke="none"/>
+        <ellipse cx="33.9" cy="-6" rx="4.8" ry="7" fill="#fffaf7" stroke="none"/>
+        <circle cx="-2.5" cy="12.5" r="2" fill="#fffaf7" stroke="none"/>
+        <circle cx="40.5" cy="10.5" r="1.7" fill="#fffaf7" stroke="none"/>
       </g>
-      <path fill="#5f233d" stroke-width="1.5" d="M1 23Q6 25 12 22 10 29 6 29 3 29 1 23Z"/>
+      <path d="M-52-4Q-55-30-35-43-13-59 15-50 43-44 51-25L54-13Q44-17 35-26L36-14Q19-18 8-32 3-19-22-17L-16-26Q-37-19-47-5Z" fill="#282537"/>
+      <path d="M-38-31Q-29-41-14-45m7-1 6 0" stroke="#686381" stroke-width="2"/>
+      <path d="M-32-10Q-20-14-9-8M18-9Q26-13 37-14" stroke-width="2.7"/>
+      <path d="M2 32q7 2 12-3-1 7-7 7" stroke="#512b46" stroke-width="2"/>
+      <path d="M-38 24l4 3m73-4-3 4" stroke="#e49c8d" stroke-width="1.7"/>
+    </g>
+
+    <g id="bubbles" stroke="#241633" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-26 37Q-41 38-51 45-56 49-52 53-50 56-44 54-32 49-19 47Z" fill="#fff9f4"/>
+      <path d="M-49 43q-10 2-9 8 2 6 12 3-5-5-3-11Z" fill="#241633"/>
+      <path d="M-14 42Q-21 53-31 59-35 63-31 68-27 72-21 66-11 57-5 48Z" fill="#fff9f4"/>
+      <path d="M-29 57q-8 5-5 11 5 7 14-2-7 0-9-9Z" fill="#241633"/>
+      <path d="M-33 27Q-24 25-14 30-8 34-3 44L-13 54Q-29 52-38 43Z" fill="#80c9f4"/>
+      <path d="M-35 34Q-22 43-8 44L-11 50Q-27 48-37 41Z" fill="#241633" stroke="none"/>
+      <path d="M6 32Q18 32 27 25 34 20 42 22 50 24 48 30 46 37 36 35 23 43 8 43Z" fill="url(#skin)"/>
+      <path d="M-39-19C-49-34-66-39-75-24-79-17-77-7-71-3L-70-11Q-63 4-52 1L-56-7Q-44-3-37-11Z" fill="url(#yellow-hair)"/>
+      <path d="M36-23C45-36 65-38 73-25 78-18 74-11 78-5L71-9Q69 3 57 6L59-4Q44 0 39-9Z" fill="url(#yellow-hair)"/>
+      <path d="M-72-17q3-10 12-10m117 2q7-5 13 2" stroke="#fff0ac" stroke-width="2"/>
+      <path d="m-41-23-5 9m86-12 5 9" stroke="#88caff" stroke-width="6"/>
+      <path d="M-44-8C-45-30-24-43 1-44 27-44 49-29 50-6 51 20 31 39 7 41-19 44-43 24-44-8Z" fill="url(#skin)"/>
+      <g class="eyes eyes--blue">
+        <ellipse cx="-17.5" cy="1" rx="24.6" ry="28.5" fill="#fffaf7"/>
+        <ellipse cx="31" cy=".5" rx="19" ry="26.2" fill="#fffaf7"/>
+        <ellipse cx="-12" cy="2.1" rx="18.2" ry="25.7" fill="url(#blue-eye)" stroke="none"/>
+        <ellipse cx="34" cy="1.5" rx="14" ry="23.9" fill="url(#blue-eye)" stroke="none"/>
+        <ellipse cx="-9" cy="-.2" rx="13.3" ry="21.2" fill="#241633" stroke="none"/>
+        <ellipse cx="36" cy="-.9" rx="10.2" ry="19.5" fill="#241633" stroke="none"/>
+        <ellipse cx="-12.1" cy="-8" rx="5.8" ry="7.8" fill="#fffaf7" stroke="none"/>
+        <ellipse cx="33.8" cy="-7.3" rx="4.8" ry="7" fill="#fffaf7" stroke="none"/>
+        <circle cx="-3.1" cy="9.5" r="2.1" fill="#fffaf7" stroke="none"/>
+        <circle cx="40.9" cy="8" r="1.7" fill="#fffaf7" stroke="none"/>
+      </g>
+      <path d="M-47-7Q-47-29-30-40-13-51 10-46 39-44 49-26L50-11Q41-23 33-25 28-18 20-16L22-27Q12-16 3-17L7-29Q-3-18-13-17L-11-27Q-24-20-34-20Z" fill="url(#yellow-hair)"/>
+      <path d="M-33-33q10-9 21-9m7-1h6" stroke="#fff2b9" stroke-width="2.1"/>
+      <path d="M2 33q5-4 11-2-2 7-7 7-3 0-4-5Z" fill="#652e4c" stroke-width="1.7"/>
+      <path d="M-33 26l3 3m69-5-3 3" stroke="#e59b8d" stroke-width="1.8"/>
+    </g>
+
+    <g id="blossom" stroke="#26162f" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-41-14Q-53 1-62 17-71 32-85 38-75 41-66 38-73 47-84 50-67 55-49 48-52 54-61 58-35 59-20 41L26-19Q18-45-12-45-32-44-41-14Z" fill="url(#orange-hair)"/>
+      <path d="M-63 39q16-10 26-27m-17 38q17-8 23-19" stroke="#ffbf89" stroke-width="1.9"/>
+      <path d="M-21 39Q-39 44-47 51-52 57-47 61-43 64-37 60-24 51-15 47Z" fill="#fff8f3"/>
+      <path d="M-44 48q-10 6-7 12 4 7 14 0-7-4-7-12Z" fill="#26162f"/>
+      <path d="M-8 45Q-13 56-24 64-27 68-24 73-19 77-13 72-3 61 2 52Z" fill="#fff8f3"/>
+      <path d="M-21 61q-7 5-5 11 5 8 14-1-7-1-9-10Z" fill="#26162f"/>
+      <path d="M-29 30Q-16 28-5 34L5 47-8 57Q-25 56-37 47Z" fill="#f28db0"/>
+      <path d="M-34 39q14 10 34 10l-5 5q-18 0-31-9Z" fill="#26162f" stroke="none"/>
+      <path d="M-8 40Q4 37 15 37 22 37 24 42 24 48 16 50L-3 49Z" fill="url(#skin)"/>
+      <path d="M-45-3C-45-25-29-40-5-43 23-47 46-33 50-12 55 12 38 33 12 39-13 45-42 29-45-3Z" fill="url(#skin)"/>
+      <g class="eyes">
+        <path d="M-41-1C-42-17-30-26-17-26-1-27 10-16 10 0 10 18-1 31-17 31-31 31-41 17-41-1Z" fill="#fffaf7"/>
+        <path d="M13-4C12-18 23-26 35-25 46-24 52-13 50 0 49 16 41 27 30 27 20 27 13 14 13-4Z" fill="#fffaf7"/>
+        <ellipse cx="-11.5" cy="1.5" rx="18.2" ry="26.2" fill="url(#pink-eye)" stroke="none"/>
+        <ellipse cx="35" cy="-.2" rx="13.6" ry="23.7" fill="url(#pink-eye)" stroke="none"/>
+        <ellipse cx="-8.8" cy="-.4" rx="13.5" ry="21.2" fill="#26162f" stroke="none"/>
+        <ellipse cx="36.8" cy="-2" rx="10.2" ry="19.8" fill="#26162f" stroke="none"/>
+        <ellipse cx="-11.8" cy="-7.5" rx="6" ry="7.7" fill="#fffaf7" stroke="none"/>
+        <ellipse cx="34.6" cy="-8.6" rx="4.8" ry="6.9" fill="#fffaf7" stroke="none"/>
+        <circle cx="-2.9" cy="10.2" r="2" fill="#fffaf7" stroke="none"/>
+        <circle cx="41.1" cy="8.2" r="1.7" fill="#fffaf7" stroke="none"/>
+      </g>
+      <path d="M-47-6C-47-25-35-38-18-44 0-51 23-47 38-36 47-28 50-20 51-10L44-15Q39-20 33-22L34-13Q24-14 16-23L15-14Q5-15-3-23L-5-15Q-14-16-23-24L-25-16Q-35-16-41-18Z" fill="url(#orange-hair)"/>
+      <path d="M-34-31q9-9 21-11" stroke="#ffd09a" stroke-width="2.1"/>
+      <path d="M2-45Q-13-65-38-65-40-52-30-36-15-35-1-42 11-32 30-38 40-52 41-67 19-67 5-46Z" fill="#f55078"/>
+      <path d="M-30-58q15 3 25 13m37-15q-12 4-22 14" stroke="#ff9eb6" stroke-width="2.2"/>
+      <path d="M-5-47Q1-52 8-47L10-42Q6-35-3-39Z" fill="#ff7597"/>
+      <path d="M2 31q7 4 13-3-1 7-7 8-4 0-6-5Z" fill="#642a48" stroke-width="1.7"/>
+      <path d="M-34 25l4 3m69-5-3 4" stroke="#e69b8d" stroke-width="1.8"/>
     </g>
   </defs>
 
   <g stroke-linecap="round">
-    <path d="M7 207Q58 209 120 171" stroke="url(#green)" stroke-width="2.4"/>
-    <path d="M31 213Q79 211 117 184" stroke="url(#green)" stroke-width=".8"/>
-    <path d="M53 181Q133 183 242 120" stroke="url(#blue)" stroke-width="2.5"/>
-    <path d="M111 187Q183 172 236 132" stroke="url(#blue)" stroke-width=".75"/>
-    <path d="M155 135Q251 142 374 61" stroke="url(#pink)" stroke-width="2.7"/>
-    <path d="M197 143Q297 120 374 72" stroke="url(#pink)" stroke-width=".8"/>
-  </g>
-  <g opacity=".84">
-    <use href="#spark" transform="translate(306 49) scale(.84)" fill="#ffb2c5"/>
-    <use href="#spark" transform="translate(444 22) scale(.75)" fill="#ffda9c"/>
-    <use href="#spark" transform="translate(344 101) scale(.49)" fill="#ffb2c5"/>
-    <use href="#spark" transform="translate(188 98) scale(.66)" fill="#a9ceff"/>
-    <use href="#spark" transform="translate(295 128) scale(.43)" fill="#c5dcff"/>
-    <use href="#spark" transform="translate(81 143) scale(.61)" fill="#a5e8c0"/>
-    <use href="#spark" transform="translate(171 192) scale(.57)" fill="#ffda9c"/>
-    <circle cx="329" cy="35" r="1.3" fill="#ffda9c"/>
-    <circle cx="313" cy="98" r="1.1" fill="#b9ceff"/>
-    <circle cx="203" cy="87" r="1.4" fill="#d7e6ff"/>
-    <circle cx="68" cy="158" r="1.3" fill="#8be7ab"/>
-    <circle cx="184" cy="171" r="1.1" fill="#ffda9c"/>
+    <use href="#flight-green" stroke="url(#trail-green)" stroke-width="3.4"/>
+    <use href="#flight-blue" stroke="url(#trail-blue)" stroke-width="3.6"/>
+    <use href="#flight-pink" stroke="url(#trail-pink)" stroke-width="3.8"/>
+    <path d="M32 220Q73 218 110 188" stroke="url(#trail-green)" stroke-width="1"/>
+    <path d="M83 196Q159 187 221 141" stroke="url(#trail-blue)" stroke-width="1.05"/>
+    <path d="M174 148Q266 137 350 89" stroke="url(#trail-pink)" stroke-width="1.05"/>
+    <path class="comet" pathLength="1" d="M-1 215C43 223 80 203 119 168" stroke="#d6fbd9" stroke-width="1.9"/>
+    <path class="comet comet--blue" pathLength="1" d="M38 192C111 209 173 165 253 117" stroke="#d9f0ff" stroke-width="1.9"/>
+    <path class="comet comet--pink" pathLength="1" d="M128 139C223 154 299 118 383 62" stroke="#ffe1ef" stroke-width="1.9"/>
   </g>
 
-  <g id="buttercup" transform="translate(126 162) rotate(-12) scale(.73)" color="#8cdd87">
-    <use href="#flying-body"/>
-    <path fill="#242336" stroke="#1a1326" stroke-width="2.7" stroke-linejoin="round" d="M-48-3C-52-20-41-36-23-41-5-49 19-44 34-31 45-24 50-8 44 5L48 17 34 11 29 17-31 18-43 13-53 15-47 6Z"/>
-    <use href="#face"/>
-    <path fill="#242336" stroke="#1a1326" stroke-width="2.7" stroke-linejoin="round" d="M-45-5C-48-25-34-38-20-42-2-48 24-43 38-29 44-23 47-14 46-7L39-11Q32-17 25-20L28-8Q11-11 2-25-2-13-23-13L-18-20Q-34-16-43-5Z"/>
-    <path d="M-32-30Q-22-37-10-38M-4-39H3" stroke="#56506a" stroke-width="1.6" stroke-linecap="round"/>
+  <g transform="translate(127 164) scale(.71) rotate(-13)">
+    <g class="wingmate wingmate--green"><use href="#buttercup"/></g>
+  </g>
+  <g transform="translate(251 114) scale(.74) rotate(-11)">
+    <g class="wingmate wingmate--blue"><use href="#bubbles"/></g>
+  </g>
+  <g transform="translate(385 65) scale(.75) rotate(-10)">
+    <g class="wingmate wingmate--pink"><use href="#blossom"/></g>
   </g>
 
-  <g id="bubbles" transform="translate(252 111) rotate(-9) scale(.76)" color="#80c7f5">
-    <use href="#flying-body"/>
-    <g fill="#ffd15a" stroke="#482740" stroke-width="2.6" stroke-linejoin="round">
-      <path d="M-34-21C-44-37-64-35-70-22-74-13-70-3-65 0L-64-8Q-60 5-49 6L-53-2Q-41 0-36-9Z"/>
-      <path d="M32-23C39-36 56-37 63-26 69-18 64-12 66-7L60-12Q59-4 53 0L52-6Q43-4 37-12Z"/>
-    </g>
-    <path d="M-39-22-43-13M36-24 41-16" stroke="#7cbbf4" stroke-width="5" stroke-linecap="round"/>
-    <use href="#face"/>
-    <path fill="#ffd15a" stroke="#482740" stroke-width="2.6" stroke-linejoin="round" d="M-42-7C-44-25-27-38-5-40 19-42 39-32 44-16L43-8Q36-16 29-19 22-13 11-13L14-23Q2-15-10-13L-9-23Q-24-17-32-18Z"/>
-    <path d="M-30-29Q-20-35-10-36M-4-36H1" stroke="#ffea99" stroke-width="1.8" stroke-linecap="round"/>
-  </g>
-
-  <g id="blossom" transform="translate(388 59) rotate(-8) scale(.79)" color="#f58cab">
-    <use href="#flying-body"/>
-    <path fill="#ef824c" stroke="#4d283b" stroke-width="2.7" stroke-linejoin="round" d="M-41-10Q-50 9-62 22L-54 21Q-65 28-75 29L-66 33-77 37Q-55 41-38 32L-42 38Q-22 39-11 24L31-12Q22-34-7-34-26-33-41-10Z"/>
-    <path fill="#ef824c" stroke="#4d283b" stroke-width="2.6" d="M-44-7Q-45-30-24-37 4-46 28-32 43-26 46-8Z"/>
-    <use href="#face"/>
-    <path fill="#f58c52" stroke="#4d283b" stroke-width="2.7" stroke-linejoin="round" d="M-43-7Q-44-26-28-34-10-43 11-39 38-36 44-17L44-9Q36-15 30-19L30-11Q22-12 15-19L14-11Q5-12-2-19L-4-11Q-14-12-22-19L-25-12Q-32-13-36-15Z"/>
-    <path d="M-30-29Q-20-35-9-35" stroke="#ffb47b" stroke-width="1.8" stroke-linecap="round"/>
-    <path fill="#f65071" stroke="#5a223b" stroke-width="2.7" stroke-linejoin="round" d="M1-40Q-10-56-26-58-28-44-17-33-6-33 1-37 10-31 23-35 31-44 30-57 13-57 3-41Z"/>
-    <path d="M-19-50Q-10-47-4-41M23-50Q14-46 9-41" stroke="#ff95a8" stroke-width="2.15" stroke-linecap="round"/>
-    <path fill="#fb6581" stroke="#5a223b" stroke-width="2.25" d="M-4-43Q0-46 6-43L8-37Q4-33-3-36Z"/>
-  </g>
+  <g transform="translate(80 138)"><use class="glimmer" href="#sparkle" fill="#9be2ba"/></g>
+  <g transform="translate(170 178) scale(.64)"><use class="glimmer glimmer--late" href="#sparkle" fill="#ffe4aa"/></g>
+  <g transform="translate(199 89) scale(.68)"><use class="glimmer" href="#sparkle" fill="#b7d8ff"/></g>
+  <g transform="translate(309 49) scale(.92)"><use class="glimmer glimmer--late" href="#sparkle" fill="#ffc0de"/></g>
+  <g transform="translate(344 115) scale(.61)"><use class="glimmer" href="#sparkle" fill="#f5aad0"/></g>
+  <g transform="translate(444 22) scale(.76)"><use class="glimmer glimmer--late" href="#sparkle" fill="#ffe4aa"/></g>
+  <circle cx="70" cy="157" r="1.8" fill="#c0f1cb"/>
+  <circle cx="177" cy="162" r="1.8" fill="#ffdc9a"/>
+  <circle cx="297" cy="129" r="1.8" fill="#c2e9ff"/>
+  <circle cx="315" cy="123" r="3.8" stroke="#b0d8ff" stroke-width="1.1"/>
+  <circle cx="322" cy="111" r="2.4" stroke="#b0d8ff" stroke-width="1"/>
+  <circle cx="432" cy="47" r="1.6" fill="#ffd8e9"/>
 </svg>

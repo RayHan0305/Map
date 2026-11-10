@@ -64,8 +64,8 @@ export async function loadPlaces() {
   return Array.from(albums.values());
 }
 
-export async function savePhotos(place, files, { date = '', note = '' } = {}) {
-  const { id, name, region = '', lat, lon } = place;
+export async function savePhotos(place, files, { date = '', note = '', locations = [] } = {}) {
+  const { id, name, region = '', lat, lon, city, exact } = place;
   if (!id || !name?.trim() || !Number.isFinite(lat) || !Number.isFinite(lon)) {
     throw new Error('请先选择一个有效地点。');
   }
@@ -80,6 +80,7 @@ export async function savePhotos(place, files, { date = '', note = '' } = {}) {
     note,
     addedAt,
     position,
+    ...(locations[position] && { location: locations[position] }),
   }));
   if (!records.length) throw new Error('请至少选择一张照片。');
 
@@ -87,7 +88,7 @@ export async function savePhotos(place, files, { date = '', note = '' } = {}) {
   const transaction = database.transaction([placesStore, photosStore], 'readwrite');
   const places = transaction.objectStore(placesStore);
   const photos = transaction.objectStore(photosStore);
-  const storedPlace = { id, name: name.trim(), region, lat, lon };
+  const storedPlace = { id, name: name.trim(), region, lat, lon, ...(city && { city }), ...(exact && { exact }) };
 
   // One transaction commits the place and the whole batch together. The keyed place
   // record is shared across uploads, while each photo has its own independent key.

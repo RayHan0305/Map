@@ -1,4 +1,4 @@
-# 旅迹地球
+# 贝Ki-Map
 
 一个中文个人旅行相册。首页的互动地球可旋转和缩放，点按地点标记可打开相册。可以搜索城市、街道和地址，在地球或街道地图上选点，也可以直接输入经纬度。照片、地点、旅行日期和备注保存在浏览器的 IndexedDB 中。
 
@@ -9,6 +9,7 @@
 | 2026-11-07 | `f91542bb059889751bd1ba8fc3f37923f2b9b1ff` | 中文网页、互动地球、地点和照片存储、城市目录、飞天小女警插画及示例素材 |
 | 2026-11-10 | `a9d3d321a02dcc7218d7bced3a12d46c6b390953` | 粉彩界面与加大的地球、可跳过的飞天小女警开场、全球地址搜索、街道地图和精确坐标选点 |
 | 2026-11-10 | `2d7df3923da44d954e21c6ce38e47818490bb979` | 5400×2700 NASA 真彩色卫星地球、WebGL 高清渲染、国界及中文大洲／国家／城市标注 |
+| 2026-11-10 | `53ed049e026d8be1964f1dba984a1001964ef9ea` | 贝Ki-Map 品牌与角色动画、国家到拍摄点的多级地图、滚轮进入街道、旅程往返定位、GPS 与旧版相册兼容 |
 
 源版本已通过浏览器验收，覆盖两地上传、同一地点补传、刷新后从标记打开相册，以及手机触控模拟下的手动选点和上传。部署版的访问权限由 Sites 管理。用户照片和浏览器中的相册记录保存在各自的设备上。
 
@@ -17,6 +18,10 @@
 2026-11-10 高清地球版本已用 Chrome 验证东亚与欧洲的地理图层、高清 WebGL 渲染、无 WebGL 的卫星底图回退、相册上传与刷新保留，以及手机触控选点。
 
 卫星底图来自 [NASA Earth Observatory 的 Blue Marble Next Generation](https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography/#July)。国界及地名来自 [Natural Earth](https://www.naturalearthdata.com/downloads/110m-cultural-vectors/)。
+
+贝Ki-Map 的国家和城市镜头、城市媒体面板及旅程视图参考了 [StarMap](https://github.com/Aisland-SJL/StarMap/blob/main/README.zh.md)。国家点选使用 [Natural Earth 1:50m Admin 0 数据](https://www.naturalearthdata.com/downloads/50m-cultural-vectors/50m-admin-0-countries-2/)，地图中的街道瓦片来自 OpenStreetMap。角色和动画为站内矢量绘制。
+
+Chrome 验收覆盖点击中国陆地进入国家面板、打开上海相册、点外滩拍摄点并在地图与旅程之间往返、滚轮进入街道、实际门牌搜索、EXIF GPS 微调、开场跳过和减少动态效果、手机触控和底部相册、旧版 IndexedDB v1 记录和照片读取。
 
 ## 本地预览
 

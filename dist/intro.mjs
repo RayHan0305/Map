@@ -1,11 +1,11 @@
 const sprite = new URL("./powerpuff.svg", import.meta.url).href;
-const introLength = 1760;
+const introLength = 1800;
 let openIntro;
 
 const girls = [
-  { id: "buttercup", crop: "80 120 91 91" },
-  { id: "bubbles", crop: "192 68 113 101" },
-  { id: "blossom", crop: "326 5 106 114" },
+  { id: "buttercup", crop: "-71 -61 133 135" },
+  { id: "bubbles", crop: "-83 -52 166 129" },
+  { id: "blossom", crop: "-91 -72 149 152" },
 ];
 
 const artwork = `
@@ -46,7 +46,7 @@ const artwork = `
       </svg>
     `).join("")}
   </div>
-  <p class="travel-intro__title" aria-hidden="true">旅迹地球</p>
+  <p class="travel-intro__title" aria-hidden="true">贝Ki-Map</p>
   <button class="travel-intro__skip" type="button" autofocus>跳过动画 <span aria-hidden="true">›</span></button>
 `;
 
@@ -56,7 +56,7 @@ export function showIntro() {
   const overlay = document.createElement("dialog");
   if (typeof overlay.showModal !== "function") return;
   overlay.className = "travel-intro";
-  overlay.setAttribute("aria-label", "旅迹地球开场动画");
+  overlay.setAttribute("aria-label", "贝Ki-Map 开场动画");
   overlay.innerHTML = artwork;
   document.body.append(overlay);
   openIntro = overlay;

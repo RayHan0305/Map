@@ -302,3 +302,19 @@ export function searchCities(value) {
     .slice(0, 8)
     .map(({ place }) => ({ ...place }));
 }
+
+export function nearestCity({ lat, lon }, maximumKm = 30, query) {
+  const candidates = query ? searchCities(query) : cities.map(({ place }) => place);
+  const longitudeScale = Math.cos(lat * Math.PI / 180);
+  let nearest = null;
+  let shortest = maximumKm;
+  for (const place of candidates) {
+    const delta = ((place.lon - lon + 540) % 360) - 180;
+    const distance = 111 * Math.hypot(place.lat - lat, delta * longitudeScale);
+    if (distance < shortest) {
+      nearest = place;
+      shortest = distance;
+    }
+  }
+  return nearest;
+}

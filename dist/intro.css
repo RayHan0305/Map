@@ -18,7 +18,7 @@
 }
 
 .travel-intro[open] {
-  animation: travel-intro-out 1760ms both;
+  animation: travel-intro-out 1800ms both;
 }
 
 .travel-intro::backdrop {
@@ -82,6 +82,9 @@
 }
 
 .travel-intro__girl--buttercup {
+  --fly-x: -83vw;
+  --fly-y: 34vh;
+  --fly-angle: 16deg;
   width: 21%;
   left: 17%;
   top: 33%;
@@ -89,6 +92,9 @@
 }
 
 .travel-intro__girl--bubbles {
+  --fly-x: -78vw;
+  --fly-y: 24vh;
+  --fly-angle: 8deg;
   width: 25%;
   left: 39%;
   top: 16%;
@@ -96,6 +102,9 @@
 }
 
 .travel-intro__girl--blossom {
+  --fly-x: -98vw;
+  --fly-y: 28vh;
+  --fly-angle: 12deg;
   width: 24%;
   left: 64%;
   top: -2%;
@@ -149,7 +158,7 @@
 }
 
 @keyframes travel-intro-fly {
-  0% { opacity: 0; transform: translate(-94vw, 31vh) rotate(12deg) scale(.42); }
+  0% { opacity: 0; transform: translate(var(--fly-x), var(--fly-y)) rotate(var(--fly-angle)) scale(.42); }
   19% { opacity: 1; }
   76% { transform: translate(2%, -4%) rotate(-3deg) scale(1.03); }
   100% { opacity: 1; transform: translate(0) rotate(0) scale(1); }

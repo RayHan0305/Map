@@ -4,8 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f9effb">
-  <meta name="description" content="和飞天小女警一起探索地球，按地点收藏自己的旅行照片。">
-  <title>旅迹地球 · 个人旅行相册</title>
+  <meta name="description" content="贝Ki-Map 是你的 3D 旅行相册。按地点收藏照片，沿着旅程重访拍摄点。">
+  <meta property="og:title" content="贝Ki-Map">
+  <meta property="og:description" content="在 3D 地球上浏览旅行照片和拍摄点。">
+  <meta name="twitter:title" content="贝Ki-Map">
+  <meta name="twitter:description" content="在 3D 地球上浏览旅行照片和拍摄点。">
+  <title>贝Ki-Map · 个人旅行相册</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./intro.css">
@@ -30,13 +34,20 @@
     <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
     <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5M5 16v4h14v-4"/></symbol>
     <symbol id="i-map" viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/></symbol>
+    <symbol id="i-journey" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M6 8v5a4 4 0 0 0 4 4h3a3 3 0 0 0 0-6h-1a3 3 0 0 1 0-6h4"/></symbol>
   </svg>
   <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="./" aria-label="旅迹地球首页">
-        <span class="brand-icon"><svg class="icon"><use href="#i-orbit"/></svg></span>
-        <span>旅迹地球 <small>TRAVEL ATLAS</small></span>
-      </a>
+      <div class="brand-nav">
+        <a class="brand" href="./" aria-label="贝Ki-Map 首页">
+          <span class="brand-icon"><svg class="icon"><use href="#i-orbit"/></svg></span>
+          <span>贝Ki-Map <small>旅行相册</small></span>
+        </a>
+        <nav class="view-tabs" aria-label="页面视图">
+          <button id="tab-map" type="button" aria-current="page" aria-controls="map-view"><svg class="icon" aria-hidden="true"><use href="#i-map"/></svg>地图</button>
+          <button id="tab-journey" type="button" aria-controls="journey-view"><svg class="icon" aria-hidden="true"><use href="#i-journey"/></svg>旅程</button>
+        </nav>
+      </div>
       <div class="record-search">
         <div class="search-field">
           <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
@@ -49,10 +60,10 @@
     </div>
   </header>
 
-  <main class="workspace">
+  <main id="map-view" class="workspace">
     <section class="intro" aria-labelledby="page-title">
-      <div class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg> 飞天小女警 · 旅行相册</div>
-      <h1 id="page-title">旅迹<span>地球</span></h1>
+      <div class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg> 个人旅行相册</div>
+      <h1 id="page-title">贝<span>Ki-Map</span></h1>
       <p>在地球上选个地点，<br>把那里的照片收进相册。</p>
     </section>
 
@@ -73,12 +84,18 @@
       <div class="star-field" aria-hidden="true"></div>
       <div class="orbit orbit-one" aria-hidden="true"></div>
       <div class="orbit orbit-two" aria-hidden="true"></div>
-      <canvas id="globe" tabindex="0" aria-label="3D 卫星地球，显示国界与地名。可拖动或用方向键旋转。按加号或减号缩放，按回车选择中心点。"></canvas>
-      <img class="mascots" src="./powerpuff.svg" alt="在地球旁飞行的飞天小女警" draggable="false">
+      <canvas id="globe" tabindex="0" aria-label="3D 卫星地球。点击陆地浏览国家。可拖动或用方向键旋转，按加号或减号缩放，按回车选择中心点。"></canvas>
+      <img class="mascots" src="./powerpuff.svg" alt="三位卡通角色飞过地球" draggable="false">
       <div class="stage-actions">
         <button id="pick-on-globe" class="button map-action" type="button"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>地球选点</button>
         <button id="open-detail-map" class="button map-action" type="button"><svg class="icon" aria-hidden="true"><use href="#i-map"/></svg>街道地图</button>
       </div>
+      <nav id="map-path" class="map-path" aria-label="当前地图位置" hidden>
+        <button id="map-world" type="button">全球</button>
+        <button id="map-country" type="button" hidden></button>
+        <button id="map-city" type="button" hidden></button>
+        <span id="map-point" hidden></span>
+      </nav>
       <div class="globe-controls" aria-label="地球控制">
         <button id="zoom-in" class="icon-button" type="button" aria-label="放大" title="放大"><svg class="icon"><use href="#i-plus"/></svg></button>
         <button id="zoom-out" class="icon-button" type="button" aria-label="缩小" title="缩小"><svg class="icon"><use href="#i-minus"/></svg></button>
@@ -86,7 +103,7 @@
         <button id="toggle-rotation" class="icon-button" type="button" aria-label="暂停自转" title="暂停自转"><svg class="icon"><use href="#i-pause"/></svg></button>
       </div>
       <div class="stage-legend"><span class="legend-dot"></span> 有照片的地点</div>
-      <div class="stage-hint"><svg class="icon" aria-hidden="true"><use href="#i-hand"/></svg><span>拖动旋转 <i>·</i> 滚轮或双指缩放</span></div>
+      <div class="stage-hint"><svg class="icon" aria-hidden="true"><use href="#i-hand"/></svg><span>点陆地看国家 <i>·</i> 滚轮放大到街道</span></div>
       <div id="picking-banner" class="picking-banner" hidden>
         <span><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg> 点击地球上的任意一点</span>
         <button id="cancel-picking" class="button quiet" type="button">取消</button>
@@ -98,10 +115,31 @@
       <h2 id="album-title"></h2>
       <div id="album-meta" class="album-meta"></div>
       <p id="album-coords" class="album-coords"></p>
+      <p id="album-point-name" class="album-point-name" hidden></p>
+      <button id="album-cover" type="button" class="album-cover" aria-label="查看相册封面大图" hidden></button>
       <button id="add-to-album" class="button primary" type="button"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>添加到此地点</button>
       <button id="refine-place" class="button secondary" type="button"><svg class="icon" aria-hidden="true"><use href="#i-map"/></svg>在街道地图微调</button>
+      <button id="show-album-points" class="button secondary" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span>查看拍摄点</span></button>
+      <button id="show-all-photos" class="button secondary" type="button" hidden>返回全部照片</button>
+      <button id="show-album-in-journey" class="button quiet journey-link" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#i-journey"/></svg>在旅程中查看</button>
       <div id="album-grid" class="album-grid"></div>
     </aside>
+
+    <aside id="country-panel" class="album country-panel" aria-labelledby="country-title" hidden>
+      <div class="album-top"><span class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-map"/></svg> 国家与城市</span><button id="close-country" type="button" class="icon-button" aria-label="关闭国家面板"><svg class="icon"><use href="#i-close"/></svg></button></div>
+      <h2 id="country-title"></h2>
+      <p id="country-meta" class="album-meta"></p>
+      <div id="country-cities" class="country-cities"></div>
+      <button id="country-add" type="button" class="button secondary"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>在这个国家添加地点</button>
+    </aside>
+  </main>
+
+  <main id="journey-view" class="journey" aria-labelledby="journey-title" hidden>
+    <header class="journey-header">
+      <div><p class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-journey"/></svg> 照片时间线</p><h1 id="journey-title" tabindex="-1">我的旅程</h1><p>按旅行日期浏览照片，未填写时按添加日期归档。</p></div>
+      <span id="journey-count" class="journey-count"></span>
+    </header>
+    <div id="journey-days" class="journey-days"></div>
   </main>
 
   <dialog id="upload-dialog" class="upload-dialog" aria-labelledby="upload-title">
@@ -131,8 +169,9 @@
         <label class="dropzone" id="dropzone">
           <input id="files" type="file" accept="image/*" multiple>
           <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>
-          <strong>选择照片</strong><span>可以一次添加多张，也可以拖到这里</span>
+          <strong>选择照片</strong><span>支持批量添加。照片中的 GPS 会在此处供你确认。</span>
         </label>
+        <button id="use-photo-positions" class="button secondary gps-action" type="button" hidden>按照片位置选相册</button>
         <div id="file-preview" class="file-preview"></div>
         <div class="extra-fields">
           <label><span class="field-label">旅行日期 <small>选填</small></span><input id="date" class="text-input" type="date"></label>
