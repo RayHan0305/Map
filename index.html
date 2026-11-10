@@ -37,6 +37,7 @@
     <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5M5 16v4h14v-4"/></symbol>
     <symbol id="i-map" viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/></symbol>
     <symbol id="i-journey" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M6 8v5a4 4 0 0 0 4 4h3a3 3 0 0 0 0-6h-1a3 3 0 0 1 0-6h4"/></symbol>
+    <symbol id="i-music" viewBox="0 0 24 24"><path d="M10 18V5l10-2v12M10 9l10-2"/><ellipse cx="7" cy="18" rx="3" ry="2.5"/><ellipse cx="17" cy="15" rx="3" ry="2.5"/></symbol>
   </svg>
   <header class="topbar">
     <div class="topbar-inner">
@@ -58,7 +59,20 @@
         </div>
         <div id="record-results" class="search-popup" hidden></div>
       </div>
-      <button id="add-main" class="button primary"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>添加照片</button>
+      <div class="topbar-actions">
+        <details id="music-player" class="music-player">
+          <summary class="button quiet music-trigger"><svg class="icon" aria-hidden="true"><use href="#i-music"/></svg>音乐</summary>
+          <div class="music-panel">
+            <h2>《不对等天体》伴奏</h2>
+            <p class="music-artist">余佳运</p>
+            <audio id="music-audio" controls loop preload="none" aria-label="伴奏播放器" hidden></audio>
+            <p id="music-status" class="music-status" role="status">选择本机的伴奏文件后，点播放开始。</p>
+            <label for="music-file" class="music-file-label">选择本机伴奏</label>
+            <input id="music-file" class="music-file" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac">
+          </div>
+        </details>
+        <button id="add-main" class="button primary"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>添加照片</button>
+      </div>
     </div>
   </header>
 
@@ -255,5 +269,6 @@
   <div id="toast" class="toast" role="status" hidden></div>
   <script type="module" src="./app.mjs"></script>
   <script type="module" src="./backup-ui.mjs"></script>
+  <script type="module" src="./music-player.mjs"></script>
 </body>
 </html>
