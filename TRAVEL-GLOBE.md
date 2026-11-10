@@ -10,6 +10,7 @@
 - **示例内容**。雷克雅未克、伦敦、大庆按固定顺序出现，均有标注为「示例」的实景照片。影集内附照片作者、授权和拍摄点说明。
 - **三位旅行伙伴**。花花随机打开一个已有相册并移动镜头。泡泡打开旅程并定位到最新日期。毛毛打开添加照片，有选中城市时预填地点。三位角色有中文对白，可用鼠标、键盘或手机点按。对白约停留 2.6 秒。
 - **生日开场**。约 2.8 秒，包含三位角色、粉蓝和浅金烟花以及「生日快乐」。「跳过本次」只结束当次开场。「关闭生日版」会在当前浏览器保存偏好，随后使用约 1.8 秒的普通开场。首页底部可重新开启。减少动态效果模式下，生日版使用静态祝福与烟花图案，角色回复使用静态气泡。
+- **音乐播放器**。从首页顶部「音乐」选择本机伴奏，点击播放后可以循环播放、暂停和调整进度。音频文件通过浏览器的临时对象地址读取。访客可在自己的浏览器选择文件，公开默认曲目待音源接入。
 
 ## 相册备份与找回
 
@@ -51,7 +52,7 @@ python -m http.server 8000 --bind 127.0.0.1 --directory dist
 
 本地预览和公开站分别保存数据。[本机首页](http://127.0.0.1:8000/) · [本机伦敦影集](http://127.0.0.1:8000/album.html?id=city-london)
 
-独立站使用 GitHub Pages。`main` 的 `dist/` 保存完整网页代码和素材，`gh-pages` 根目录放置同一批文件及 `.nojekyll`。应用使用相对路径，以支持 `/Map/` 子路径。发布新版时将 `dist/` 同步到发布分支根目录，保留 `.nojekyll`。仓库的 Pages 来源设置为 `Deploy from a branch`，分支 `gh-pages`，目录 `/ (root)`。[Pages 设置](https://github.com/RayHan0305/Map/settings/pages) · [当前发布提交](https://github.com/RayHan0305/Map/commit/ae2abe3c5b62db248bb12fdcae747a71bd6b3ea5)
+独立站使用 GitHub Pages。`main` 的 `dist/` 保存完整网页代码和素材，`gh-pages` 根目录放置同一批文件及 `.nojekyll`。应用使用相对路径，以支持 `/Map/` 子路径。发布新版时将 `dist/` 同步到发布分支根目录，保留 `.nojekyll`。仓库的 Pages 来源设置为 `Deploy from a branch`，分支 `gh-pages`，目录 `/ (root)`。[Pages 设置](https://github.com/RayHan0305/Map/settings/pages) · [当前发布提交](https://github.com/RayHan0305/Map/commit/b01e62cba78511cbb5b00857d2068e56f544a129)
 
 地址搜索使用 Photon，街道图层从 OpenStreetMap 获取瓦片。打开地图、示例影集、已有相册及导入备份使用站点静态文件与浏览器本地数据。[Photon](https://github.com/komoot/photon) · [OpenStreetMap 版权与署名](https://www.openstreetmap.org/copyright)
 
@@ -64,6 +65,7 @@ python -m http.server 8000 --bind 127.0.0.1 --directory dist
 | `geocoder.mjs`、`street-map.mjs`、`photo-gps.mjs` | 地址查找、街道图层和 EXIF GPS |
 | `albums.mjs`、`journey.mjs`、`album-page.mjs`、`album-navigation.mjs` | 相册分组、日期旅程、独立影集及返回视角 |
 | `storage.mjs`、`backup-data.mjs`、`backup-ui.mjs`、`photo-editor.mjs` | 本地数据、备份迁移和非破坏性编辑 |
+| `music-player.mjs` | 本机音频选曲、播放状态和面板操作 |
 | `intro.mjs`、`intro.css`、`powerpuff.svg`、`samples.mjs` | 开场、角色插画、示例地点及照片授权 |
 
 ## 验收记录
@@ -76,7 +78,8 @@ python -m http.server 8000 --bind 127.0.0.1 --directory dist
 | 跨域迁移 | 两个浏览器来源之间导出和导入，核对地点、拍摄坐标、原图字节、日期、备注和编辑。验证损坏文件拒绝、重复导入，以及模拟浏览器存储不足时回滚。 |
 | 角色和开场 | Chrome 桌面鼠标与键盘、手机尺寸触控模拟，覆盖对白、相册镜头、最近日期、上传默认地点、生日烟花、约 2.8 秒与约 1.8 秒开场，以及跳过、关闭、刷新持久化、重新开启、减少动态效果。 |
 | 公开发布 | 未登录 Chrome 能打开 GitHub Pages，检查生日开场和角色对白，能从地图打开影集。此前也验证过三个示例影集的直达、刷新和图片加载，以及旧站迁移入口。 |
-| 文件同步核对 | 本机网页文件、`main/dist` 与 `gh-pages` 发布根目录中的 35 个代码和素材文件逐项核对 Git blob 哈希一致。 |
+| 音乐 | Chrome 使用生成的 WAV 测试文件验证解码、播放进度、暂停、错误文件和恢复，以及 320、390、480 像素宽的手机触控布局。 |
+| 文件同步核对 | 生日版的本机网页文件、`main/dist` 与 `gh-pages` 发布根目录中的 35 个代码和素材文件逐项核对 Git blob 哈希一致。 |
 
 ## 同步记录
 
@@ -89,6 +92,7 @@ python -m http.server 8000 --bind 127.0.0.1 --directory dist
 | 2026-11-10 | `1f3950dea8b595d1cf0555e8710a54c504aa206a` | 粉蓝星空、三城实景示例、独立影集与可恢复的照片编辑 |
 | 2026-11-10 | `7c911c098034dfe2a539a23a4117d764e8dd4b9d` | 独立静态托管与跨域相册备份迁移 |
 | 2026-11-10 | `ae2abe3c5b62db248bb12fdcae747a71bd6b3ea5` | GitHub Pages 生日开场、浏览器偏好与旅行伙伴互动 |
+| 2026-11-10 | `b01e62cba78511cbb5b00857d2068e56f544a129` | GitHub Pages 音乐播放器与本机音频选择 |
 
 ## 参考与素材
 
