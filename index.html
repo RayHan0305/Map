@@ -11,6 +11,7 @@
   <meta name="twitter:description" content="在 3D 地球上浏览旅行照片和拍摄点。">
   <title>贝Ki-Map · 个人旅行相册</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="./earth-day.jpg" as="image">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./sky.css">
   <link rel="stylesheet" href="./intro.css">
@@ -78,6 +79,7 @@
       <footer class="atlas-notes">
         <p class="local-note"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg> 地点与照片保存在当前浏览器</p>
         <button id="open-backup" class="button quiet backup-link" type="button" aria-haspopup="dialog" hidden>相册备份与迁移</button>
+        <button id="enable-birthday" class="button quiet birthday-link" type="button" hidden>重新开启生日版</button>
         <p class="local-note map-sources">卫星影像 <a href="https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography/#July" target="_blank" rel="noopener">NASA Earth Observatory</a><span aria-hidden="true">·</span>国界与地名 <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a></p>
       </footer>
     </section>
@@ -87,7 +89,19 @@
       <div class="orbit orbit-one" aria-hidden="true"></div>
       <div class="orbit orbit-two" aria-hidden="true"></div>
       <canvas id="globe" tabindex="0" aria-label="3D 卫星地球。点击陆地浏览国家。可拖动或用方向键旋转，按加号或减号缩放，按回车选择中心点。"></canvas>
-      <img class="mascots" src="./powerpuff.svg" alt="三位卡通角色飞过地球" draggable="false">
+      <div class="mascots" role="group" aria-label="旅行伙伴">
+        <svg class="mascot-trails" viewBox="0 0 470 230" fill="none" aria-hidden="true"><use href="./powerpuff.svg#mascot-trails"/></svg>
+        <button id="mascot-pink" class="mascot mascot-pink" type="button" aria-label="花花，重温一个旅行地点">
+          <svg viewBox="-94 -80 156 164" fill="none" aria-hidden="true"><use href="./powerpuff.svg#blossom" transform="rotate(-10)"/></svg>
+        </button>
+        <button id="mascot-blue" class="mascot mascot-blue" type="button" aria-label="泡泡，查看最近的旅程">
+          <svg viewBox="-86 -61 168 145" fill="none" aria-hidden="true"><use href="./powerpuff.svg#bubbles" transform="rotate(-11)"/></svg>
+        </button>
+        <button id="mascot-green" class="mascot mascot-green" type="button" aria-label="毛毛，添加旅行照片" aria-haspopup="dialog">
+          <svg viewBox="-74 -67 139 151" fill="none" aria-hidden="true"><use href="./powerpuff.svg#buttercup" transform="rotate(-13)"/></svg>
+        </button>
+        <p id="mascot-speech" class="mascot-speech" role="status" aria-live="polite" aria-atomic="true"></p>
+      </div>
       <div class="stage-actions">
         <button id="pick-on-globe" class="button map-action" type="button"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>地球选点</button>
         <button id="open-detail-map" class="button map-action" type="button"><svg class="icon" aria-hidden="true"><use href="#i-map"/></svg>街道地图</button>

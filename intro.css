@@ -21,6 +21,18 @@
   animation: travel-intro-out 1800ms both;
 }
 
+.travel-intro--birthday {
+  color: #fff2f9;
+  background:
+    radial-gradient(ellipse at 24% 35%, #633b785e, transparent 52%),
+    radial-gradient(ellipse at 78% 52%, #4878b96e, transparent 52%),
+    linear-gradient(145deg, #191833 0%, #282442 58%, #151c35 100%);
+}
+
+.travel-intro--birthday[open] {
+  animation-duration: 2800ms;
+}
+
 .travel-intro::backdrop {
   background: transparent;
 }
@@ -127,11 +139,81 @@
   animation: travel-intro-title 580ms 230ms both;
 }
 
-.travel-intro__skip {
+.travel-intro--birthday .travel-intro__scene {
+  top: 35%;
+  width: clamp(330px, 77vw, min(900px, 135vh));
+}
+
+.travel-intro--birthday .travel-intro__title {
+  top: 69%;
+  color: #cfe6ff;
+  font-size: clamp(16px, 2.3vw, 28px);
+  text-shadow: 0 0 18px #7ba2e8a0;
+  animation-delay: 1140ms;
+}
+
+.travel-intro__greeting {
   position: absolute;
+  top: 56%;
+  left: 50%;
   z-index: 1;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  margin: 0;
+  transform: translate(-50%, -50%);
+  font-size: clamp(42px, 8.2vw, 108px);
+  font-weight: 850;
+  line-height: 1.13;
+  letter-spacing: .09em;
+  text-indent: .09em;
+  text-align: center;
+  text-shadow: 0 3px 0 #703a73, 0 0 25px #ffb9df95;
+  animation: travel-intro-title 420ms 990ms both;
+}
+
+.travel-intro__fireworks {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  width: clamp(430px, 95vw, min(1100px, 186vh));
+  height: auto;
+  overflow: visible;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.travel-intro__burst {
+  color: #ffc0e1;
+  opacity: .85;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: travel-intro-burst 870ms var(--burst-delay, 1080ms) ease-out both;
+}
+
+.travel-intro__burst--blue {
+  --burst-delay: 1210ms;
+  color: #b5e5ff;
+}
+
+.travel-intro__burst--gold {
+  --burst-delay: 1340ms;
+  color: #ffe3a9;
+}
+
+.travel-intro__controls {
+  position: absolute;
+  z-index: 2;
   top: max(16px, env(safe-area-inset-top));
   right: max(16px, env(safe-area-inset-right));
+  left: max(16px, env(safe-area-inset-left));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.travel-intro__skip,
+.travel-intro__disable {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -147,9 +229,19 @@
   cursor: pointer;
 }
 
-.travel-intro__skip:focus-visible {
-  outline: 2px solid #623b8d;
+.travel-intro__disable {
+  color: #fff4fb;
+  background: #55345f;
+}
+
+.travel-intro__skip:focus-visible,
+.travel-intro__disable:focus-visible {
+  outline: 2px solid #7e50a9;
   outline-offset: 3px;
+}
+
+.travel-intro--birthday .travel-intro__controls button:focus-visible {
+  outline-color: #d3eaff;
 }
 
 .travel-intro__skip span {
@@ -190,6 +282,12 @@
   100% { opacity: 0; }
 }
 
+@keyframes travel-intro-burst {
+  0% { opacity: 0; transform: scale(.15); }
+  44% { opacity: 1; }
+  100% { opacity: .58; transform: scale(1.04); }
+}
+
 @media (max-width: 560px) {
   .travel-intro__scene { top: 44%; }
   .travel-intro__title { top: 64%; }
@@ -198,8 +296,14 @@
 @media (max-height: 480px) {
   .travel-intro__scene { top: 42%; width: min(680px, 90vw); }
   .travel-intro__title { top: 76%; font-size: 30px; }
+  .travel-intro--birthday .travel-intro__scene { width: min(77vw, 135vh); }
+  .travel-intro--birthday .travel-intro__title { top: 77%; }
+  .travel-intro__greeting { top: 61%; font-size: clamp(36px, 12vh, 58px); }
+  .travel-intro__fireworks { width: min(88vw, 200vh); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .travel-intro[open] { display: none; }
+  .travel-intro[open]:not(.travel-intro--birthday) { display: none; }
+  .travel-intro--birthday[open],
+  .travel-intro--birthday[open] * { animation: none; }
 }

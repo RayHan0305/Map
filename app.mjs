@@ -3,7 +3,7 @@ import { nearestCity, searchCities } from './cities.mjs';
 import { loadPhotoEdits, loadPlaces, savePhotos } from './storage.mjs';
 import { parseCoordinates, searchGlobalPlaces } from './geocoder.mjs';
 import { StreetMap } from './street-map.mjs';
-import { showIntro } from './intro.mjs';
+import { enableBirthdayIntro, isBirthdayIntroEnabled, showIntro } from './intro.mjs';
 import { buildAlbums } from './albums.mjs';
 import { readPhotoCoordinates } from './photo-gps.mjs';
 import { countryById, findCountry, searchCountries } from './countries.mjs';
@@ -13,7 +13,7 @@ import { albumHref, readAlbumContext, rememberAlbumContext, returnToken } from '
 import { samples } from './samples.mjs';
 
 const initialContext = readAlbumContext(returnToken());
-if (!initialContext) showIntro();
+if (!initialContext) await showIntro();
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('globe');
@@ -28,6 +28,7 @@ const recordResults = $('record-results');
 const cityQuery = $('city-query');
 const streetDialog = $('street-dialog');
 const streetCoordinates = $('street-coords');
+const mascotSpeech = $('mascot-speech');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 const places = new Map();
@@ -50,6 +51,8 @@ let defaultPhotoLocation = null;
 let previews = [];
 let busy = false;
 let toastTimeout;
+let mascotTimeout;
+let speakingMascot;
 let lightboxPhotos = [];
 let photoIndex = 0;
 
@@ -883,6 +886,56 @@ function shiftPhoto(delta) {
   renderLightbox();
 }
 
+function clearMascotResponse() {
+  clearTimeout(mascotTimeout);
+  speakingMascot?.classList.remove('is-speaking');
+  speakingMascot = null;
+  mascotSpeech.textContent = '';
+  delete mascotSpeech.dataset.speaker;
+}
+
+function openRandomAlbum() {
+  const choices = [...albums.keys()];
+  if (choices.length) openAlbum(choices[Math.floor(Math.random() * choices.length)]);
+}
+
+function openLatestJourney() {
+  const day = buildJourney(albums)[0];
+  const entry = day?.entries[0];
+  setView('journey', entry ? { albumId: entry.albumId, date: day.date } : null);
+  if (!entry) $('journey-title').focus({ preventScroll: true });
+}
+
+for (const [color, reply, action] of [
+  ['pink', '我是花花！咱去重温一个旅行地点！', openRandomAlbum],
+  ['blue', '我是泡泡！一起翻翻旅行日记吧！', openLatestJourney],
+  ['green', '我是毛毛！今天要记录下哪段回忆？', () => startUpload(activePlace ?? albums.get(focusedAlbumId), activePoint)],
+]) {
+  const mascot = $('mascot-' + color);
+  mascot.addEventListener('click', () => {
+    clearMascotResponse();
+    speakingMascot = mascot;
+    mascot.classList.add('is-speaking');
+    mascotSpeech.dataset.speaker = color;
+    mascotSpeech.textContent = reply;
+    mascotTimeout = setTimeout(() => {
+      clearMascotResponse();
+      if (currentView === 'map' && !document.querySelector('dialog[open]')) action();
+    }, 2600);
+  });
+}
+
+const birthdayButton = $('enable-birthday');
+function updateBirthdayButton() {
+  birthdayButton.hidden = isBirthdayIntroEnabled();
+}
+updateBirthdayButton();
+window.addEventListener('birthday-intro-change', updateBirthdayButton);
+birthdayButton.addEventListener('click', () => {
+  enableBirthdayIntro();
+  toast('已重新开启生日版，下次进入时播放。');
+});
+
 $('add-main').addEventListener('click', () => startUpload());
 $('tab-map').addEventListener('click', () => setView('map'));
 $('tab-journey').addEventListener('click', () => {
@@ -986,13 +1039,18 @@ dropzone.addEventListener('drop', (event) => {
 
 document.addEventListener('pointerdown', (event) => {
   if (!event.target.closest('.record-search')) recordResults.hidden = true;
+  if (speakingMascot && !event.target.closest('.mascot')) clearMascotResponse();
+});
+document.addEventListener('focusin', (event) => {
+  if (speakingMascot && event.target !== speakingMascot) clearMascotResponse();
 });
 document.querySelector('.record-search').addEventListener('focusout', (event) => {
   if (!event.currentTarget.contains(event.relatedTarget)) recordResults.hidden = true;
 });
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape' || upload.open || lightbox.open || streetDialog.open) return;
-  if (choosingPoint) cancelPicking();
+  if (speakingMascot) clearMascotResponse();
+  else if (choosingPoint) cancelPicking();
   else if (!recordResults.hidden) recordResults.hidden = true;
   else if (!album.hidden) closeAlbum(true);
   else if (!countryPanel.hidden) $('close-country').click();

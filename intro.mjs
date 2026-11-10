@@ -1,6 +1,9 @@
 const sprite = new URL("./powerpuff.svg", import.meta.url).href;
 const introLength = 1800;
+const birthdayLength = 2800;
+const birthdayPreference = "beiki-map-birthday-intro";
 let openIntro;
+let birthdayEnabled;
 
 const girls = [
   { id: "buttercup", crop: "-71 -61 133 135" },
@@ -46,27 +49,91 @@ const artwork = `
       </svg>
     `).join("")}
   </div>
-  <p class="travel-intro__title" aria-hidden="true">贝Ki-Map</p>
-  <button class="travel-intro__skip" type="button" autofocus>跳过动画 <span aria-hidden="true">›</span></button>
 `;
 
+const birthdayArtwork = `
+  <svg class="travel-intro__fireworks" viewBox="0 0 840 420" aria-hidden="true" focusable="false">
+    <defs>
+      <g id="travel-intro-burst" stroke="currentColor" stroke-linecap="round" fill="none">
+        <path d="M0-24V-59M0 24v35M-24 0h-35M24 0h35M-17-17l-23-23m57 57 23 23m-57-23-23 23m57-57 23-23" stroke-width="3"/>
+        <path d="M0-72v1m0 143v1M-72 0h1m143 0h1M-51-51l1 1m101 101 1 1m-103-1 1-1m101-101 1-1" stroke-width="5"/>
+        <circle r="4" fill="currentColor" stroke="none"/>
+      </g>
+    </defs>
+    <g transform="translate(175 168) scale(1.13)">
+      <use class="travel-intro__burst travel-intro__burst--pink" href="#travel-intro-burst"/>
+    </g>
+    <g transform="translate(661 150) scale(.87)">
+      <use class="travel-intro__burst travel-intro__burst--blue" href="#travel-intro-burst"/>
+    </g>
+    <g transform="translate(605 307) scale(.96)">
+      <use class="travel-intro__burst travel-intro__burst--gold" href="#travel-intro-burst"/>
+    </g>
+    <g transform="translate(230 321) scale(.54)">
+      <use class="travel-intro__burst travel-intro__burst--blue" href="#travel-intro-burst"/>
+    </g>
+  </svg>
+  <h2 class="travel-intro__greeting">生日快乐</h2>
+`;
+
+export function isBirthdayIntroEnabled() {
+  if (birthdayEnabled !== undefined) return birthdayEnabled;
+  try {
+    return window.localStorage.getItem(birthdayPreference) !== "off";
+  } catch {
+    return true;
+  }
+}
+
+function setBirthdayIntroEnabled(enabled) {
+  birthdayEnabled = enabled;
+  try {
+    if (enabled) window.localStorage.removeItem(birthdayPreference);
+    else window.localStorage.setItem(birthdayPreference, "off");
+  } catch {
+    // Keep the preference available for this page when browser storage is unavailable.
+  }
+  window.dispatchEvent(new Event("birthday-intro-change"));
+}
+
+export function enableBirthdayIntro() {
+  setBirthdayIntroEnabled(true);
+}
+
 export function showIntro() {
-  if (openIntro?.isConnected || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (openIntro?.isConnected) return;
+  const birthday = isBirthdayIntroEnabled();
+  if (!birthday && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   const overlay = document.createElement("dialog");
   if (typeof overlay.showModal !== "function") return;
-  overlay.className = "travel-intro";
-  overlay.setAttribute("aria-label", "贝Ki-Map 开场动画");
-  overlay.innerHTML = artwork;
+  overlay.className = birthday ? "travel-intro travel-intro--birthday" : "travel-intro";
+  overlay.setAttribute("aria-label", birthday ? "贝Ki-Map 生日开场" : "贝Ki-Map 开场动画");
+  overlay.innerHTML = `
+    ${birthday ? birthdayArtwork : ""}
+    ${artwork}
+    <p class="travel-intro__title" aria-hidden="true">贝Ki-Map</p>
+    <div class="travel-intro__controls">
+      <button class="travel-intro__skip" type="button" autofocus>跳过本次 <span aria-hidden="true">›</span></button>
+      ${birthday ? '<button class="travel-intro__disable" type="button">关闭生日版</button>' : ""}
+    </div>
+  `;
   document.body.append(overlay);
   openIntro = overlay;
 
-  const timer = window.setTimeout(() => overlay.close(), introLength);
-  overlay.addEventListener("close", () => {
-    window.clearTimeout(timer);
-    overlay.remove();
-    if (openIntro === overlay) openIntro = undefined;
-  }, { once: true });
   overlay.querySelector(".travel-intro__skip").addEventListener("click", () => overlay.close());
-  overlay.showModal();
+  overlay.querySelector(".travel-intro__disable")?.addEventListener("click", () => {
+    setBirthdayIntroEnabled(false);
+    overlay.close();
+  });
+  return new Promise((resolve) => {
+    overlay.showModal();
+    const timer = window.setTimeout(() => overlay.close(), birthday ? birthdayLength : introLength);
+    overlay.addEventListener("close", () => {
+      window.clearTimeout(timer);
+      overlay.remove();
+      if (openIntro === overlay) openIntro = undefined;
+      resolve();
+    }, { once: true });
+  });
 }
